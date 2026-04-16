@@ -1,0 +1,354 @@
+---
+title: "Basic R Programming Practice"
+author: "Tim Irwin"
+date: "2026-04-16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Basic R Programming Practice
+
+This document is for practice based on the swirl R Programming lessons:
+
+1. Basic Building Blocks  
+2. Workspace and Files  
+3. Sequences of Numbers  
+4. Vectors  
+5. Missing Values  
+6. Subsetting Vectors  
+7. Matrices and Data Frames  
+
+Write your answers **inside the R chunks** below.
+
+You may want to start with:
+
+```{r}
+rm(list = ls())
+setwd("/Users/timothyirwin/Desktop/Coursera/Foundations/data science/Practice")
+```
+
+---
+
+# 1. Basic Building Blocks
+
+## Exercise 1.1
+Assign the value `12` to an object called `x`.
+
+```{r}
+x <- 12
+```
+
+## Exercise 1.2
+Assign the value `3.5` to an object called `y`.
+
+```{r}
+y <- 3.5
+```
+
+## Exercise 1.3
+Add `x` and `y`.
+
+```{r}
+x + y
+```
+
+## Exercise 1.4
+Create an object called `name` that stores your first name as a character string.
+
+```{r}
+name <- "Tim"
+```
+
+## Exercise 1.5
+Check the class of `x`, `y`, and `name`.
+
+```{r}
+class(x)
+class(y)
+class(name)
+```
+
+---
+
+# 2. Workspace and Files
+
+## Exercise 2.1
+Display your current working directory.
+
+```{r}
+getwd()
+```
+
+## Exercise 2.2
+Assign your current working directory to an object called `old_dir`.
+
+```{r}
+old_dir <- getwd()
+```
+
+## Exercise 2.3
+Create a new directory called `practice_folder`.
+
+```{r}
+dir.create("practice_folder")
+```
+
+## Exercise 2.4
+List the files in your current working directory.
+
+```{r}
+ls()
+```
+
+## Exercise 2.5
+Delete `practice_folder` when you are done.
+
+```{r}
+unlink("practice_folder", recursive = TRUE)
+```
+
+---
+
+# 3. Sequences of Numbers
+
+## Exercise 3.1
+Create a sequence from 1 to 10.
+
+```{r}
+1:10
+```
+
+## Exercise 3.2
+Create a sequence from 0 to 20 by 2.
+
+```{r}
+seq(0, 20, by = 2)
+```
+
+## Exercise 3.3
+Create a sequence of 8 numbers from 5 to 40.
+
+```{r}
+seq(5, 40, length.out = 8)
+```
+
+## Exercise 3.4
+Suppose:
+
+```{r}
+my_seq <- c(4, 8, 12, 16, 20)
+my_seq
+```
+
+Create a sequence from 1 to the length of `my_seq`.
+
+```{r}
+seq_along(my_seq)
+```
+
+---
+
+# 4. Vectors
+
+## Exercise 4.1
+Create a numeric vector called `num_vect` containing `0.5`, `55`, `-10`, and `6`.
+
+```{r}
+num_vect <- c(0.5, 55, -10, 6)
+num_vect
+```
+
+## Exercise 4.2
+Create a logical vector called `tf` that tests whether `num_vect` is less than 1.
+
+```{r}
+tf <- num_vect < 1
+tf
+```
+
+## Exercise 4.3
+Create a character vector called `days` with the values `"Mon"`, `"Tue"`, `"Wed"`, `"Thu"`, `"Fri"`.
+
+```{r}
+days <- c("Mon", "Tue", "Wed", "Thu", "Fri")
+days
+```
+
+## Exercise 4.4
+Combine `num_vect` with itself and the number `999` in the middle.
+
+```{r}
+c(num_vect, 999, num_vect)
+```
+
+## Exercise 4.5
+Multiply `num_vect` by 2 and then add 100.
+
+```{r}
+(num_vect * 2) + 100
+```
+
+---
+
+# 5. Missing Values
+
+## Exercise 5.1
+Create a vector called `trial` with values `1`, `5`, `NA`, `10`, and `NA`.
+
+```{r}
+trial <- c(1, 5, NA, 10, NA)
+trial
+```
+
+## Exercise 5.2
+Use `is.na()` to check which values in `trial` are missing.
+
+```{r}
+is.na(trial)
+```
+
+## Exercise 5.3
+Count how many missing values are in `trial`.
+
+```{r}
+sum(is.na(trial))
+```
+
+## Exercise 5.4
+Find the mean of `trial`, excluding missing values.
+
+```{r}
+mean(trial, na.rm = TRUE)
+```
+
+---
+
+# 6. Subsetting Vectors
+
+## Exercise 6.1
+Create a vector called `scores` with the values `88`, `72`, `95`, `64`, `90`.
+
+```{r}
+scores <- c(88, 72, 95, 64, 90)
+scores
+```
+
+## Exercise 6.2
+Extract the third element of `scores`.
+
+```{r}
+scores[3]
+```
+
+## Exercise 6.3
+Extract the first three elements of `scores`.
+
+```{r}
+scores[1:3]
+```
+
+## Exercise 6.4
+Extract all elements of `scores` greater than 80.
+
+```{r}
+scores[scores >80]
+```
+
+## Exercise 6.5
+Replace all elements of `scores` less than 70 with `70`.
+
+```{r}
+scores[scores < 70] <- 70
+scores
+```
+
+---
+
+# 7. Matrices and Data Frames
+
+## Exercise 7.1
+Create two vectors:
+
+```{r}
+a <- c(1, 3, 5)
+b <- c(2, 4, 6)
+```
+
+Use `cbind()` to combine them into a matrix.
+
+```{r}
+cbind(a, b)
+```
+
+## Exercise 7.2
+Use `rbind()` to combine `a` and `b` into a matrix.
+
+```{r}
+rbind(a, b)
+```
+
+## Exercise 7.3
+Create a data frame called `student_data` with these columns:
+- `name`: `"Ana"`, `"Ben"`, `"Cara"`
+- `score`: `91`, `85`, `88`
+- `passed`: `TRUE`, `TRUE`, `TRUE`
+
+```{r}
+student_data <- data.frame(
+  name = c("Ana", "Ben", "Cara"),
+  score = c(91, 85, 88),
+  passed = c(TRUE, TRUE, TRUE)
+)
+student_data
+```
+
+## Exercise 7.4
+Display the names of the columns in `student_data`.
+
+```{r}
+names(student_data)
+```
+
+## Exercise 7.5
+Extract the `score` column from `student_data`.
+
+```{r}
+student_data[ , 2]
+```
+
+## Exercise 7.6
+Extract the second row of `student_data`.
+
+```{r}
+student_data[2, ]
+```
+
+---
+
+# Mini Challenge
+
+## Challenge 1
+Create a vector from 1 to 20. Extract only the even numbers.
+
+```{r}
+d <- 1:20
+d[seq(2, 20, by = 2)]
+```
+
+## Challenge 2
+Create a vector with some missing values and calculate its mean without the missing values.
+
+```{r}
+c <- c(3, 7, NA, 10, 2, NA, 14, NA)
+mean(c, na.rm = TRUE)
+```
+
+## Challenge 3
+Create a 3 x 2 matrix using the numbers 1 through 6.
+
+```{r}
+matrix(1:6, nrow = 3, ncol = 2)
+```

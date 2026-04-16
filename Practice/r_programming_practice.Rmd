@@ -1,0 +1,557 @@
+---
+title: "R Programming Practice (Part 2)"
+author: "Tim Irwin"
+date: "2026-04-16"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Practice (Part 2)
+
+This document is for practice based on *R Programming for Data Science* by Roger D. Peng (pages 12–22 and 35–43):
+
+1. R Nuts and Bolts
+2. Subsetting R Objects
+3. Vectorized Operations
+
+Write your answers inside the R chunks below.
+
+You may want to start with:
+
+```{r}
+setwd("/Users/timothyirwin/Desktop/Coursera/Foundations/data science/Practice")
+rm(list = ls())
+```
+
+---
+
+# 1. R Nuts and Bolts
+
+## Entering Input and Evaluation
+
+### Exercise 1.1
+
+Assign the value 42 to an object called `x`, then print it using auto-printing (just type the object name).
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.2
+
+Assign the string `"hello world"` to an object called `msg`. Then use the `print()` function to explicitly print it.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.3
+
+Create a vector `x <- 10:30` and print it. Notice the index numbers in square brackets on the left side of the output. What does `[13]` on the second line represent?
+
+```{r}
+# Your code here
+
+```
+
+## R Objects
+
+### Exercise 1.4
+
+What are the five basic ("atomic") classes of objects in R? Assign one example of each to a different variable (e.g., `a`, `b`, `c_val`, `d`, `e`), and use `class()` on each to confirm.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.5
+
+What is the one rule about vectors in R? What is the exception to this rule? Write your answer as a comment.
+
+```{r}
+# Your answer here (as a comment)
+
+```
+
+## Numbers
+
+### Exercise 1.6
+
+What is the difference between `1` and `1L` in R? Use `class()` to show the difference.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.7
+
+What does `1 / 0` return in R? What about `0 / 0`? Try both.
+
+```{r}
+# Your code here
+
+```
+
+## Attributes
+
+### Exercise 1.8
+
+Create a vector `x <- 1:6`. Use `attributes()` to check its attributes. Then convert it to a matrix with `dim(x) <- c(2, 3)` and check `attributes()` again. What changed?
+
+```{r}
+# Your code here
+
+```
+
+## Creating Vectors
+
+### Exercise 1.9
+
+Use `c()` to create each of the following vectors:
+
+- A numeric vector: `0.5, 0.6`
+- A logical vector: `TRUE, FALSE`
+- A character vector: `"a", "b", "c"`
+- An integer sequence from 9 to 29
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.10
+
+Use `vector()` to create a numeric vector of length 10. What values does it contain by default?
+
+```{r}
+# Your code here
+
+```
+
+## Mixing Objects and Coercion
+
+### Exercise 1.11
+
+What happens when you run each of the following? Predict the class before running, then check with `class()`.
+
+```{r}
+y1 <- c(1.7, "a")
+y2 <- c(TRUE, 2)
+y3 <- c("a", TRUE)
+
+# Check classes here
+
+```
+
+### Exercise 1.12
+
+Create a vector `x <- 0:6`. Use `as.numeric()`, `as.logical()`, and `as.character()` to explicitly coerce it. What does each produce?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.13
+
+Try coercing the character vector `c("a", "b", "c")` to numeric. What happens?
+
+```{r}
+# Your code here
+
+```
+
+## Matrices
+
+### Exercise 1.14
+
+Create a 2 x 3 matrix using `matrix(nrow = 2, ncol = 3)` without specifying data. What are the default values?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.15
+
+Create a matrix with the values 1 through 6, with 2 rows and 3 columns. Are the values filled by column or by row?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.16
+
+Create a vector `m <- 1:10`. Then add a dimension attribute to turn it into a 2 x 5 matrix using `dim(m) <- c(2, 5)`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.17
+
+Create two vectors, `x <- 1:3` and `y <- 10:12`. Use `cbind()` to combine them as columns, and `rbind()` to combine them as rows.
+
+```{r}
+# Your code here
+
+```
+
+## Lists
+
+### Exercise 1.18
+
+Create a list containing: the number 1, the string `"a"`, the value `TRUE`, and the complex number `1+4i`. Print it and notice the double-bracket `[[]]` indexing in the output.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.19
+
+Create an empty list of length 5 using `vector("list", length = 5)`. What does each element contain?
+
+```{r}
+# Your code here
+
+```
+
+## Factors
+
+### Exercise 1.20
+
+Create a factor from the vector `c("yes", "yes", "no", "yes", "no")`. Use `table()` to count the levels, and `unclass()` to see the underlying integer representation.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.21
+
+Create the same factor as above, but this time set the levels so that `"yes"` comes before `"no"`. Hint: use the `levels` argument.
+
+```{r}
+# Your code here
+
+```
+
+## Missing Values
+
+### Exercise 1.22
+
+Create a vector `x <- c(1, 2, NA, 10, 3)`. Use `is.na()` to identify the missing values. Then use `is.nan()` on the same vector. Are the results the same?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.23
+
+Create a vector `x <- c(1, 2, NaN, NA, 4)`. Apply both `is.na()` and `is.nan()` to it. What is the difference between how they treat `NaN` and `NA`?
+
+```{r}
+# Your code here
+
+```
+
+## Data Frames
+
+### Exercise 1.24
+
+Create a data frame with two columns: `foo` containing `1:4` and `bar` containing `c(TRUE, TRUE, FALSE, FALSE)`. Use `nrow()` and `ncol()` to check its dimensions.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.25
+
+What is the difference between a data frame and a matrix? Write your answer as a comment.
+
+```{r}
+# Your answer here (as a comment)
+
+```
+
+## Names
+
+### Exercise 1.26
+
+Create a vector `x <- 1:3`. Assign the names `"New York"`, `"Seattle"`, and `"Los Angeles"` using the `names()` function. Print `x` and its names.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.27
+
+Create a named list: `x <- list("Los Angeles" = 1, Boston = 2, London = 3)`. Use `names()` to extract the names.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.28
+
+Create a 2 x 2 matrix from `1:4`. Assign row names `"a"` and `"b"`, and column names `"c"` and `"d"` using `dimnames()`.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 2. Subsetting R Objects
+
+## Subsetting a Vector
+
+### Exercise 2.1
+
+Create a vector `x <- c("a", "b", "c", "c", "d", "a")`. Extract the first element, the second element, and elements 1 through 4.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.2
+
+Using the same vector `x`, extract elements 1, 3, and 4 using `c()` to specify the indices.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.3
+
+Using the same vector `x`, extract all elements that come after `"a"` in alphabetical order. Do this in two ways: (1) by first creating a logical vector, and (2) by subsetting directly with a logical expression.
+
+```{r}
+# Your code here
+
+```
+
+## Subsetting a Matrix
+
+### Exercise 2.4
+
+Create a 2 x 3 matrix: `x <- matrix(1:6, 2, 3)`. Extract the element in row 1, column 2. Then extract the element in row 2, column 1.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.5
+
+Using the same matrix, extract the entire first row. Then extract the entire second column.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.6
+
+When you extract `x[1, 2]`, R returns a vector of length 1, not a 1x1 matrix. How do you preserve the matrix structure? Try it with `drop = FALSE`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.7
+
+Extract the first row of the matrix using `x[1, ]`. What is the result's class? Now try `x[1, , drop = FALSE]`. What class is the result now?
+
+```{r}
+# Your code here
+
+```
+
+## Subsetting Lists
+
+### Exercise 2.8
+
+Create a list: `x <- list(foo = 1:4, bar = 0.6)`. Extract the first element using `[[`. Then extract `bar` using both `[["bar"]]` and `$bar`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.9
+
+Create a list: `x <- list(foo = 1:4, bar = 0.6, baz = "hello")`. Store `"foo"` in a variable called `name`. Use `x[[name]]` to extract the element. Why does `x$name` return `NULL` instead?
+
+```{r}
+# Your code here
+
+```
+
+## Subsetting Nested Elements
+
+### Exercise 2.10
+
+Create a nested list: `x <- list(a = list(10, 12, 14), b = c(3.14, 2.81))`. Extract the third element of the first element in two ways: using `x[[c(1, 3)]]` and using `x[[1]][[3]]`.
+
+```{r}
+# Your code here
+
+```
+
+## Extracting Multiple Elements
+
+### Exercise 2.11
+
+Using `x <- list(foo = 1:4, bar = 0.6, baz = "hello")`, extract the first and third elements using `[`. What class is the result? How is this different from using `[[`?
+
+```{r}
+# Your code here
+
+```
+
+## Partial Matching
+
+### Exercise 2.12
+
+Create a list `x <- list(aardvark = 1:5)`. Try `x$a`, `x[["a"]]`, and `x[["a", exact = FALSE]]`. What does each return?
+
+```{r}
+# Your code here
+
+```
+
+## Removing NA Values
+
+### Exercise 2.13
+
+Create a vector `x <- c(1, 2, NA, 4, NA, 5)`. Use `is.na()` and logical negation (`!`) to extract only the non-missing values.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.14
+
+Create two vectors with NAs in the same positions:
+
+- `x <- c(1, 2, NA, 4, NA, 5)`
+- `y <- c("a", "b", NA, "d", NA, "f")`
+
+Use `complete.cases()` to find which positions have no missing values in either vector, then subset both `x` and `y` using that result.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.15
+
+Load the built-in `airquality` dataset. Use `complete.cases()` to create a version with no missing values. How many complete rows are there compared to the original?
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 3. Vectorized Operations
+
+### Exercise 3.1
+
+Create two vectors: `x <- 1:4` and `y <- 6:9`. Add them together. Then subtract, multiply, and divide them element-wise.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.2
+
+Using `x <- 1:4`, test which elements are greater than 2, which are greater than or equal to 2, and which are less than 3. What class of vector does each comparison return?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.3
+
+Create two 2x2 matrices:
+
+- `x <- matrix(1:4, 2, 2)`
+- `y <- matrix(rep(10, 4), 2, 2)`
+
+Perform element-wise multiplication (`*`), element-wise division (`/`), and true matrix multiplication (`%*%`). How do the results differ?
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# Mini Challenges
+
+## Challenge 1
+
+Create a factor from `c("low", "med", "high", "low", "high")` with levels ordered as `low`, `med`, `high`. Verify the ordering with `levels()`.
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 2
+
+Create a named list with three elements: `name = "Alice"`, `scores = c(90, 85, 92)`, and `passed = TRUE`. Extract the second score using nested indexing.
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 3
+
+Create a 3x3 matrix of the numbers 1 through 9. Extract the submatrix consisting of rows 1-2 and columns 2-3. Use `drop = FALSE` to keep it as a matrix.
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 4
+
+Create a vector with some NAs: `z <- c(5, NA, 8, NA, 12, 3, NA)`. In one line, calculate the sum of the non-missing values.
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 5
+
+Given `x <- c(10, 20, 30, 40, 50)` and `y <- c(1, 0, 1, 0, 1)`, use vectorized operations to extract only the elements of `x` where `y` equals 1.
+
+```{r}
+# Your code here
+
+```
