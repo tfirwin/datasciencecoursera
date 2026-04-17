@@ -35,7 +35,7 @@ rm(list = ls())
 Assign the value 42 to an object called `x`, then print it using auto-printing (just type the object name).
 
 ```{r}
-# Your code here
+x <- 42
 
 ```
 
@@ -44,7 +44,8 @@ Assign the value 42 to an object called `x`, then print it using auto-printing (
 Assign the string `"hello world"` to an object called `msg`. Then use the `print()` function to explicitly print it.
 
 ```{r}
-# Your code here
+msg <- c("hello world")
+print(msg)
 
 ```
 
@@ -53,8 +54,9 @@ Assign the string `"hello world"` to an object called `msg`. Then use the `print
 Create a vector `x <- 10:30` and print it. Notice the index numbers in square brackets on the left side of the output. What does `[13]` on the second line represent?
 
 ```{r}
-# Your code here
-
+x <- 10:30
+x
+# the thirteen number?? it doesn't appear on my output
 ```
 
 ## R Objects
@@ -64,8 +66,20 @@ Create a vector `x <- 10:30` and print it. Notice the index numbers in square br
 What are the five basic ("atomic") classes of objects in R? Assign one example of each to a different variable (e.g., `a`, `b`, `c_val`, `d`, `e`), and use `class()` on each to confirm.
 
 ```{r}
-# Your code here
+a <- c("x", "y", "z") # character
+b <- c(1, 4, 7, 9)    # numeric
+c_val <- 4:27         # integer
+d <- c(1+0i, 2+4i)    # complex
+e <- c(T, F, F, F, T) # logical
 
+class(a)
+class(b)
+class(c_val)
+class(d)
+class(e)
+
+# what's a more efficient way to run the classes rather than having to enter 
+# individually? Loop??
 ```
 
 ### Exercise 1.5
@@ -73,7 +87,7 @@ What are the five basic ("atomic") classes of objects in R? Assign one example o
 What is the one rule about vectors in R? What is the exception to this rule? Write your answer as a comment.
 
 ```{r}
-# Your answer here (as a comment)
+# they all have to be of the same class, except for lists
 
 ```
 
@@ -84,8 +98,11 @@ What is the one rule about vectors in R? What is the exception to this rule? Wri
 What is the difference between `1` and `1L` in R? Use `class()` to show the difference.
 
 ```{r}
-# Your code here
+class(1)
+class(1L)
 
+# so the L makes it an integer? so i can add L to any whole number and make it 
+# an integer? what would the point of doing so be?
 ```
 
 ### Exercise 1.7
@@ -101,11 +118,16 @@ What does `1 / 0` return in R? What about `0 / 0`? Try both.
 
 ### Exercise 1.8
 
-Create a vector `x <- 1:6`. Use `attributes()` to check its attributes. Then convert it to a matrix with `dim(x) <- c(2, 3)` and check `attributes()` again. What changed?
+Create a vector `y <- 1:6`. Use `attributes()` to check its attributes. Then convert it to a matrix with `dim(y1) <- c(2, 3)` and check `attributes()` again. What changed?
 
 ```{r}
-# Your code here
+y <- 1:6
+attributes(y)
+dim(y) <- c(2, 3)
+attributes(y)
 
+
+# i want to learn more about creating matrices in the next practice round
 ```
 
 ## Creating Vectors
@@ -120,8 +142,14 @@ Use `c()` to create each of the following vectors:
 - An integer sequence from 9 to 29
 
 ```{r}
-# Your code here
-
+num <- c(0.5, 0.6)
+num
+lo <- c(TRUE, FALSE)
+lo
+char <- c("a", "b", "c")
+char
+int <- 9:29
+int
 ```
 
 ### Exercise 1.10
@@ -129,7 +157,8 @@ Use `c()` to create each of the following vectors:
 Use `vector()` to create a numeric vector of length 10. What values does it contain by default?
 
 ```{r}
-# Your code here
+vector("numeric", length = 10)
+# contains 0 by default
 
 ```
 
@@ -140,12 +169,14 @@ Use `vector()` to create a numeric vector of length 10. What values does it cont
 What happens when you run each of the following? Predict the class before running, then check with `class()`.
 
 ```{r}
-y1 <- c(1.7, "a")
-y2 <- c(TRUE, 2)
-y3 <- c("a", TRUE)
+y1 <- c(1.7, "a") # character
+y2 <- c(TRUE, 2) # numeric
+y3 <- c("a", TRUE) # character
 
 # Check classes here
-
+class(y1)
+class(y2)
+class(y3)
 ```
 
 ### Exercise 1.12
@@ -153,8 +184,10 @@ y3 <- c("a", TRUE)
 Create a vector `x <- 0:6`. Use `as.numeric()`, `as.logical()`, and `as.character()` to explicitly coerce it. What does each produce?
 
 ```{r}
-# Your code here
-
+x1 <- 0:6
+as.numeric(x1)
+as.logical(x1)
+as.character(x1)
 ```
 
 ### Exercise 1.13
@@ -162,7 +195,10 @@ Create a vector `x <- 0:6`. Use `as.numeric()`, `as.logical()`, and `as.characte
 Try coercing the character vector `c("a", "b", "c")` to numeric. What happens?
 
 ```{r}
-# Your code here
+g <- c("a", "b", "c")
+as.numeric(g)
+
+# NA values introduced by coercion
 
 ```
 
@@ -173,7 +209,9 @@ Try coercing the character vector `c("a", "b", "c")` to numeric. What happens?
 Create a 2 x 3 matrix using `matrix(nrow = 2, ncol = 3)` without specifying data. What are the default values?
 
 ```{r}
-# Your code here
+matrix(nrow = 2, ncol = 3)
+
+# default values are NA
 
 ```
 
@@ -182,8 +220,8 @@ Create a 2 x 3 matrix using `matrix(nrow = 2, ncol = 3)` without specifying data
 Create a matrix with the values 1 through 6, with 2 rows and 3 columns. Are the values filled by column or by row?
 
 ```{r}
-# Your code here
-
+matrix(1:6, nrow = 2, ncol =3)
+# filled by column
 ```
 
 ### Exercise 1.16
@@ -191,8 +229,11 @@ Create a matrix with the values 1 through 6, with 2 rows and 3 columns. Are the 
 Create a vector `m <- 1:10`. Then add a dimension attribute to turn it into a 2 x 5 matrix using `dim(m) <- c(2, 5)`.
 
 ```{r}
-# Your code here
+m <- 1:10
+dim(m) <- c(2, 5)
+m
 
+# next time don't give me the code to do this
 ```
 
 ### Exercise 1.17
@@ -200,7 +241,10 @@ Create a vector `m <- 1:10`. Then add a dimension attribute to turn it into a 2 
 Create two vectors, `x <- 1:3` and `y <- 10:12`. Use `cbind()` to combine them as columns, and `rbind()` to combine them as rows.
 
 ```{r}
-# Your code here
+x4 <- 1:3
+y4 <- 10:12
+cbind(x4, y4)
+rbind(x4, y4)
 
 ```
 
@@ -211,7 +255,7 @@ Create two vectors, `x <- 1:3` and `y <- 10:12`. Use `cbind()` to combine them a
 Create a list containing: the number 1, the string `"a"`, the value `TRUE`, and the complex number `1+4i`. Print it and notice the double-bracket `[[]]` indexing in the output.
 
 ```{r}
-# Your code here
+list(1, "a", TRUE, 1+4i)
 
 ```
 
@@ -220,7 +264,8 @@ Create a list containing: the number 1, the string `"a"`, the value `TRUE`, and 
 Create an empty list of length 5 using `vector("list", length = 5)`. What does each element contain?
 
 ```{r}
-# Your code here
+vector("list", length = 5)
+# contains NULL values
 
 ```
 
@@ -231,8 +276,9 @@ Create an empty list of length 5 using `vector("list", length = 5)`. What does e
 Create a factor from the vector `c("yes", "yes", "no", "yes", "no")`. Use `table()` to count the levels, and `unclass()` to see the underlying integer representation.
 
 ```{r}
-# Your code here
-
+k <- factor(c("yes", "yes", "no", "yes", "no"))
+table(k)
+unclass(k)
 ```
 
 ### Exercise 1.21
@@ -240,7 +286,9 @@ Create a factor from the vector `c("yes", "yes", "no", "yes", "no")`. Use `table
 Create the same factor as above, but this time set the levels so that `"yes"` comes before `"no"`. Hint: use the `levels` argument.
 
 ```{r}
-# Your code here
+k <- factor(c("yes", "yes", "no", "yes", "no"),
+            levels = c("yes", "no"))
+k
 
 ```
 
@@ -251,7 +299,10 @@ Create the same factor as above, but this time set the levels so that `"yes"` co
 Create a vector `x <- c(1, 2, NA, 10, 3)`. Use `is.na()` to identify the missing values. Then use `is.nan()` on the same vector. Are the results the same?
 
 ```{r}
-# Your code here
+x5 <- c(1, 2, NA, 10, 3)
+is.na(x5)
+is.nan(x5)
+
 
 ```
 
@@ -260,7 +311,12 @@ Create a vector `x <- c(1, 2, NA, 10, 3)`. Use `is.na()` to identify the missing
 Create a vector `x <- c(1, 2, NaN, NA, 4)`. Apply both `is.na()` and `is.nan()` to it. What is the difference between how they treat `NaN` and `NA`?
 
 ```{r}
-# Your code here
+x6 <- c(1, 2, NaN, NA, 4)
+is.na(x6)
+is.nan(x6)
+
+# is.na() gives a TRUE logical value for NAs and NaN
+# whereas is.nan() gives a TRUE logical value for only NaN
 
 ```
 
@@ -271,8 +327,9 @@ Create a vector `x <- c(1, 2, NaN, NA, 4)`. Apply both `is.na()` and `is.nan()` 
 Create a data frame with two columns: `foo` containing `1:4` and `bar` containing `c(TRUE, TRUE, FALSE, FALSE)`. Use `nrow()` and `ncol()` to check its dimensions.
 
 ```{r}
-# Your code here
-
+z <- data.frame(foo = 1:4, bar = c(TRUE, TRUE, FALSE, FALSE))
+nrow(z)
+ncol(z)
 ```
 
 ### Exercise 1.25
@@ -280,7 +337,8 @@ Create a data frame with two columns: `foo` containing `1:4` and `bar` containin
 What is the difference between a data frame and a matrix? Write your answer as a comment.
 
 ```{r}
-# Your answer here (as a comment)
+# data frames can store different types of objects in each column, whereas
+# matrices have to have the same class for all elements
 
 ```
 
@@ -291,8 +349,9 @@ What is the difference between a data frame and a matrix? Write your answer as a
 Create a vector `x <- 1:3`. Assign the names `"New York"`, `"Seattle"`, and `"Los Angeles"` using the `names()` function. Print `x` and its names.
 
 ```{r}
-# Your code here
-
+x7 <- 1:3
+names(x7) <- c("New York", "Seattle", "Los Angeles")
+x7
 ```
 
 ### Exercise 1.27
@@ -300,7 +359,8 @@ Create a vector `x <- 1:3`. Assign the names `"New York"`, `"Seattle"`, and `"Lo
 Create a named list: `x <- list("Los Angeles" = 1, Boston = 2, London = 3)`. Use `names()` to extract the names.
 
 ```{r}
-# Your code here
+x8 <- list("Los Angeles" = 1, "Boston" = 2, "London" = 3)
+names(x8)
 
 ```
 
@@ -309,7 +369,9 @@ Create a named list: `x <- list("Los Angeles" = 1, Boston = 2, London = 3)`. Use
 Create a 2 x 2 matrix from `1:4`. Assign row names `"a"` and `"b"`, and column names `"c"` and `"d"` using `dimnames()`.
 
 ```{r}
-# Your code here
+m <- matrix(1:4, nrow = 2, ncol = 2)
+dimnames(m) <- list(c("a", "b"), c("c", "d"))
+m
 
 ```
 
@@ -324,8 +386,10 @@ Create a 2 x 2 matrix from `1:4`. Assign row names `"a"` and `"b"`, and column n
 Create a vector `x <- c("a", "b", "c", "c", "d", "a")`. Extract the first element, the second element, and elements 1 through 4.
 
 ```{r}
-# Your code here
-
+x8 <- c("a", "b", "c", "c", "d", "a")
+x8[1]
+x8[2]
+x8[1:4]
 ```
 
 ### Exercise 2.2
@@ -333,7 +397,7 @@ Create a vector `x <- c("a", "b", "c", "c", "d", "a")`. Extract the first elemen
 Using the same vector `x`, extract elements 1, 3, and 4 using `c()` to specify the indices.
 
 ```{r}
-# Your code here
+x8[c(1, 3, 4)]
 
 ```
 
@@ -342,8 +406,9 @@ Using the same vector `x`, extract elements 1, 3, and 4 using `c()` to specify t
 Using the same vector `x`, extract all elements that come after `"a"` in alphabetical order. Do this in two ways: (1) by first creating a logical vector, and (2) by subsetting directly with a logical expression.
 
 ```{r}
-# Your code here
-
+u <- x8 > "a"
+u
+x8[x8 > "a"]
 ```
 
 ## Subsetting a Matrix
@@ -353,7 +418,8 @@ Using the same vector `x`, extract all elements that come after `"a"` in alphabe
 Create a 2 x 3 matrix: `x <- matrix(1:6, 2, 3)`. Extract the element in row 1, column 2. Then extract the element in row 2, column 1.
 
 ```{r}
-# Your code here
+x9 <- matrix(1:6, 2, 3)
+x9[2, 1]
 
 ```
 
@@ -362,7 +428,7 @@ Create a 2 x 3 matrix: `x <- matrix(1:6, 2, 3)`. Extract the element in row 1, c
 Using the same matrix, extract the entire first row. Then extract the entire second column.
 
 ```{r}
-# Your code here
+x9[1, ]
 
 ```
 
@@ -371,7 +437,7 @@ Using the same matrix, extract the entire first row. Then extract the entire sec
 When you extract `x[1, 2]`, R returns a vector of length 1, not a 1x1 matrix. How do you preserve the matrix structure? Try it with `drop = FALSE`.
 
 ```{r}
-# Your code here
+x9[1, 2, drop = FALSE]
 
 ```
 
@@ -381,7 +447,10 @@ Extract the first row of the matrix using `x[1, ]`. What is the result's class? 
 
 ```{r}
 # Your code here
-
+u1 <- x9[1, ]
+class(u1)
+u2 <- x9[1, , drop = FALSE]
+class(u2)
 ```
 
 ## Subsetting Lists
@@ -391,7 +460,10 @@ Extract the first row of the matrix using `x[1, ]`. What is the result's class? 
 Create a list: `x <- list(foo = 1:4, bar = 0.6)`. Extract the first element using `[[`. Then extract `bar` using both `[["bar"]]` and `$bar`.
 
 ```{r}
-# Your code here
+x10 <- list(foo = 1:4, bar = 0.6)
+x10[[1]]
+x10[["bar"]]
+x10$bar
 
 ```
 
@@ -400,7 +472,12 @@ Create a list: `x <- list(foo = 1:4, bar = 0.6)`. Extract the first element usin
 Create a list: `x <- list(foo = 1:4, bar = 0.6, baz = "hello")`. Store `"foo"` in a variable called `name`. Use `x[[name]]` to extract the element. Why does `x$name` return `NULL` instead?
 
 ```{r}
-# Your code here
+x11 <- list(foo = 1:4, bar = 0.6, baz = "hello")
+name <- "foo"
+x11[[name]]
+x11$name
+
+# the $ can only be used with literal names
 
 ```
 
@@ -411,7 +488,9 @@ Create a list: `x <- list(foo = 1:4, bar = 0.6, baz = "hello")`. Store `"foo"` i
 Create a nested list: `x <- list(a = list(10, 12, 14), b = c(3.14, 2.81))`. Extract the third element of the first element in two ways: using `x[[c(1, 3)]]` and using `x[[1]][[3]]`.
 
 ```{r}
-# Your code here
+x12 <- list(a = list(10, 12, 14), b = c(3.14, 2.81))
+x12[[c(1, 3)]]
+x12[[1]][[3]]
 
 ```
 
@@ -422,7 +501,10 @@ Create a nested list: `x <- list(a = list(10, 12, 14), b = c(3.14, 2.81))`. Extr
 Using `x <- list(foo = 1:4, bar = 0.6, baz = "hello")`, extract the first and third elements using `[`. What class is the result? How is this different from using `[[`?
 
 ```{r}
-# Your code here
+x13 <- list(foo = 1:4, bar = 0.6, baz = "hello")
+x13[c(1, 3)]
+x13[[c(1, 3)]]
+# the [] returns a list, not really sure why
 
 ```
 
@@ -433,7 +515,11 @@ Using `x <- list(foo = 1:4, bar = 0.6, baz = "hello")`, extract the first and th
 Create a list `x <- list(aardvark = 1:5)`. Try `x$a`, `x[["a"]]`, and `x[["a", exact = FALSE]]`. What does each return?
 
 ```{r}
-# Your code here
+x14 <- list(aardvark = 1:5)
+x14$a
+x14[["a"]] # this does NULL because it is looking for only "a" whereas 
+# the other ones are looking for a value that starts with a
+x14[["a", exact = FALSE]]
 
 ```
 
@@ -444,7 +530,9 @@ Create a list `x <- list(aardvark = 1:5)`. Try `x$a`, `x[["a"]]`, and `x[["a", e
 Create a vector `x <- c(1, 2, NA, 4, NA, 5)`. Use `is.na()` and logical negation (`!`) to extract only the non-missing values.
 
 ```{r}
-# Your code here
+x15 <- c(1, 2, NA, 4, NA, 5)
+cod <- is.na(x15)
+x15[!cod]
 
 ```
 
@@ -458,8 +546,11 @@ Create two vectors with NAs in the same positions:
 Use `complete.cases()` to find which positions have no missing values in either vector, then subset both `x` and `y` using that result.
 
 ```{r}
-# Your code here
+x15 <- c(1, 2, NA, 4, NA, 5)
+y5 <- c("a", "b", NA, "d", NA, "f")
 
+good <- complete.cases(x15, y5)
+good
 ```
 
 ### Exercise 2.15
@@ -467,8 +558,9 @@ Use `complete.cases()` to find which positions have no missing values in either 
 Load the built-in `airquality` dataset. Use `complete.cases()` to create a version with no missing values. How many complete rows are there compared to the original?
 
 ```{r}
-# Your code here
-
+good1 <- complete.cases(airquality)
+airquality[good1, ]
+# idk if i did this right
 ```
 
 ---
@@ -480,7 +572,13 @@ Load the built-in `airquality` dataset. Use `complete.cases()` to create a versi
 Create two vectors: `x <- 1:4` and `y <- 6:9`. Add them together. Then subtract, multiply, and divide them element-wise.
 
 ```{r}
-# Your code here
+x15 <- 1:4
+y15 <- 6:9
+
+x15 + y15
+x15 - y15
+x15 * y15
+x15 / y15
 
 ```
 
@@ -489,7 +587,10 @@ Create two vectors: `x <- 1:4` and `y <- 6:9`. Add them together. Then subtract,
 Using `x <- 1:4`, test which elements are greater than 2, which are greater than or equal to 2, and which are less than 3. What class of vector does each comparison return?
 
 ```{r}
-# Your code here
+x16 <- 1:4
+x16 > 2
+x16 >= 2
+x16 < 3
 
 ```
 
@@ -503,7 +604,11 @@ Create two 2x2 matrices:
 Perform element-wise multiplication (`*`), element-wise division (`/`), and true matrix multiplication (`%*%`). How do the results differ?
 
 ```{r}
-# Your code here
+x17 <- matrix(1:4, 2, 2)
+y17 <- matrix(rep(10, 4), 2, 2)
+x17 * y17
+x17 / y17
+x17 %*% y17
 
 ```
 
@@ -516,8 +621,12 @@ Perform element-wise multiplication (`*`), element-wise division (`/`), and true
 Create a factor from `c("low", "med", "high", "low", "high")` with levels ordered as `low`, `med`, `high`. Verify the ordering with `levels()`.
 
 ```{r}
-# Your code here
+factor1 <- factor(c("low", "med", "high", "low", "high"),
+                  levels = c("low", "med", "high"))
+factor1
 
+
+## can you explain to me when i need to use the factor function and when i don't
 ```
 
 ## Challenge 2
@@ -525,7 +634,8 @@ Create a factor from `c("low", "med", "high", "low", "high")` with levels ordere
 Create a named list with three elements: `name = "Alice"`, `scores = c(90, 85, 92)`, and `passed = TRUE`. Extract the second score using nested indexing.
 
 ```{r}
-# Your code here
+list1 <- list(name = "Alice", scores = c(90, 85, 92), passed = TRUE)
+list1[[c(2, 2)]]
 
 ```
 
@@ -534,8 +644,9 @@ Create a named list with three elements: `name = "Alice"`, `scores = c(90, 85, 9
 Create a 3x3 matrix of the numbers 1 through 9. Extract the submatrix consisting of rows 1-2 and columns 2-3. Use `drop = FALSE` to keep it as a matrix.
 
 ```{r}
-# Your code here
-
+matrix1 <- matrix(1:9, nrow = 3, ncol = 3)
+matrix1
+matrix1[1:2, 2:3, drop = FALSE]
 ```
 
 ## Challenge 4
@@ -543,7 +654,8 @@ Create a 3x3 matrix of the numbers 1 through 9. Extract the submatrix consisting
 Create a vector with some NAs: `z <- c(5, NA, 8, NA, 12, 3, NA)`. In one line, calculate the sum of the non-missing values.
 
 ```{r}
-# Your code here
+z1 <- c(5, NA, 8, NA, 12, 3, NA)
+sum(z1, na.rm = TRUE)
 
 ```
 
@@ -552,6 +664,8 @@ Create a vector with some NAs: `z <- c(5, NA, 8, NA, 12, 3, NA)`. In one line, c
 Given `x <- c(10, 20, 30, 40, 50)` and `y <- c(1, 0, 1, 0, 1)`, use vectorized operations to extract only the elements of `x` where `y` equals 1.
 
 ```{r}
-# Your code here
+x17 <- c(10, 20, 30, 40, 50)
+y17 <- c(1, 0, 1, 0, 1)
+x17[y17 == 1]
 
 ```
