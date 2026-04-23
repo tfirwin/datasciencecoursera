@@ -1,0 +1,572 @@
+---
+title: "R Programming Practice (Part 3)"
+author: "Tim Irwin"
+date: "2026-04-17"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Practice (Part 2)
+
+This practice set covers the same material as before — *R Programming for Data Science* by Roger D. Peng (pages 12–22 and 35–43):
+
+1. R Nuts and Bolts
+2. Subsetting R Objects
+3. Vectorized Operations
+
+The difference this time: the exercises are **scenario-based** and use R's **built-in datasets**. Instead of telling you exactly what to type, each question describes a problem to solve. There's usually more than one right approach — what matters is that your answer works and the logic is sound.
+
+Write your answers inside the R chunks below.
+
+You may want to start with:
+
+```{r}
+rm(list = ls())
+```
+
+## A quick reference for built-in datasets used in this practice
+
+All of these come pre-loaded with R — no installation needed. Run `?datasetname` in the console to see documentation. You can also type the dataset name on its own line to view it.
+
+- `airquality` — Daily air quality measurements in New York, May–September 1973.
+- `mtcars` — Fuel consumption and 10 aspects of design/performance for 32 cars.
+- `iris` — Measurements of 150 iris flowers across 3 species.
+- `women` — Average heights and weights for American women aged 30–39.
+- `state.x77` — A matrix of statistics on U.S. states (population, income, illiteracy, etc.).
+
+---
+
+# 1. R Nuts and Bolts
+
+## Scenario: Getting to know your data
+
+### Exercise 1.1
+
+Load up the `mtcars` dataset by just typing its name. Then check its class with `class()`. What kind of R object is it?
+
+```{r}
+cars <- mtcars
+class(cars)
+# it is a data frame with numerical values
+```
+
+### Exercise 1.2
+
+Look at the `state.x77` object. Check its class. Is it the same type of object as `mtcars`? If not, what's different about it structurally?
+
+```{r}
+state <- state.x77
+class(state)
+# numerical values
+```
+
+### Exercise 1.3
+
+Use `class()` on three different columns of `mtcars`: `mpg`, `cyl`, and `am`. What classes are they? Do they match what you'd expect?
+
+```{r}
+class(mtcars$mpg)
+class(mtcars$cyl)
+class(mtcars$am)
+
+```
+
+### Exercise 1.4
+
+The `airquality` dataset has a `Month` column. Check its class. Then create a new version of it as a **factor** with month names ("May", "June", "July", "August", "September") as the labels in the correct order. Hint: `factor()` has both a `levels` argument and a `labels` argument.
+
+```{r}
+class(airquality$Month)
+airquality1 <- airquality
+airquality1$Month <- factor(airquality1$Month, levels = c(5, 6, 7, 8, 9), 
+       labels = c("May", "June", "July", "August", "September"))
+```
+
+## Attributes
+
+### Exercise 1.5
+
+Pick any column from `mtcars` (say, `mtcars$mpg`). Check its `attributes()`. Then check the attributes of the whole `mtcars` data frame. What's the difference?
+
+```{r}
+attributes(mtcars$wt)
+attributes(mtcars)
+
+# When checking the attributes of a variable in mtcars, I get a NULL Result, as it's
+# has numeric values
+
+```
+
+### Exercise 1.6
+
+Create a numeric vector of length 10 containing any numbers you want. Use `attributes()` to confirm it has no attributes. Then add a `names` attribute to it by assigning `names()`. Check `attributes()` again.
+
+```{r}
+plain <- c(7, 54, 23, 49, 29, 61, 9, 42, 68, 92)
+attributes(plain)
+names(plain) <- c("Meg", "Jake", "Sean", "Merc", "JJ", "Jackson", "Dillon",
+                  "Jaedyn", "Luke", "Bella")
+attributes(plain)
+```
+
+## Coercion in the real world
+
+### Exercise 1.7
+
+You're given a character vector `c("12", "45", "7", "89")` representing numbers that were read in as strings. Convert them to numeric so you can do math on them, then calculate their sum.
+
+```{r}
+x <- c("12", "45", "7", "89")
+x <- as.numeric(x)
+sum(x)
+
+```
+
+### Exercise 1.8
+
+What happens if you try to coerce `c("12", "forty-five", "7")` to numeric? Run it and explain the output in a comment.
+
+```{r}
+z <- c("12", "fourty-five", "7")
+z <- as.numeric(z)
+z
+
+# "fourty-five" was coerced into an NA
+```
+
+### Exercise 1.9
+
+The `mtcars$am` column is stored as numeric (0 = automatic, 1 = manual). Coerce it to a logical vector where 1 becomes `TRUE` and 0 becomes `FALSE`. Then use the logical vector to count how many cars are manual. Hint: `sum()` on a logical vector counts the `TRUE`s.
+
+```{r}
+mtcars1$am <- as.logical(mtcars$am)
+sum(mtcars1$am)
+mtcars$am
+```
+
+## Matrices
+
+### Exercise 1.10
+
+Create a 3x4 matrix filled with the numbers 1 through 12. Then create another 3x4 matrix filled with the same numbers, but with `byrow = TRUE`. Compare the two — how do they differ?
+
+```{r}
+a <- matrix(1:12, nrow = 3, ncol = 4)
+b <- matrix(1:12, nrow = 3, ncol = 4, byrow = TRUE)
+a
+b
+
+# byrow = TRUE makes the numbers increase sequentially by row, where as 
+# no byrow = TRUE the numbers increase sequentially down the column
+```
+
+### Exercise 1.11
+
+Take the first 6 rows of `mtcars` (use `head()`) and extract just the `mpg` and `hp` columns. Convert this subset to a matrix using `as.matrix()` or `data.matrix()`. Then use `dim()` to confirm the dimensions.
+
+```{r}
+# got help from Claude
+head(mtcars)
+d <- mtcars[, c("mpg", "hp")]
+d <- as.matrix(head(d))
+dim(d)
+
+# or could do 
+# d <- as.matrix(head(mtcars[, c("mpg", "hp")]))
+# dim(d)
+
+```
+
+### Exercise 1.12
+
+Create two vectors from `mtcars`: one called `mpg_vals` from `mtcars$mpg` and one called `wt_vals` from `mtcars$wt`. Use `cbind()` to combine them into a two-column matrix. Then use `rbind()` on the same two vectors. What's different about the results?
+
+```{r}
+mpg_vals <- mtcars$mpg
+wt_vals <- mtcars$wt
+cbind(mpg_vals, wt_vals)
+rbind(mpg_vals, wt_vals)
+
+# cbind takes the vectors and puts the values in columns, whereas
+# rbind makes each observation a column and put the vectors in rows
+
+```
+
+## Lists
+
+### Exercise 1.13
+
+Create a list that holds information about yourself with at least 4 elements of different types: for example, your name (character), age (numeric), whether you're currently learning R (logical), and a vector of hobbies (character vector). Print it out.
+
+```{r}
+list1 <- list("Tim", 39, TRUE, "puzzles")
+list1
+
+```
+
+### Exercise 1.14
+
+The `iris` dataset is a data frame — but remember, data frames are really just special lists. Use `names()` on `iris` to get the column names. Then use `length()` on `iris`. What does `length()` return for a data frame, and why?
+
+```{r}
+names(iris)
+length(iris)
+
+# the length() argument shows how many variables are in the data frame, 
+# as far as why, maybe because that is how wide the data frame is, 5 variables?
+```
+
+## Factors
+
+### Exercise 1.15
+
+The `iris$Species` column is already a factor. Use `levels()` to see its levels, `table()` to see how many of each species there are, and `unclass()` to peek at the underlying integer representation.
+
+```{r}
+levels(iris$Species)
+table(iris$Species)
+unclass(iris$Species)
+
+```
+
+### Exercise 1.16
+
+The `mtcars$cyl` column is numeric, but cylinders are really categorical (cars have 4, 6, or 8 cylinders — no in-between). Convert `mtcars$cyl` to a factor and then use `table()` to count how many cars fall into each category.
+
+```{r}
+factor(x = mtcars$cyl, levels = c("4", "6", "8"))
+table(mtcars$cyl)
+```
+
+## Missing Values
+
+### Exercise 1.17
+
+The `airquality$Ozone` column contains missing values. Use `is.na()` and `sum()` to count exactly how many are missing.
+
+```{r}
+sum(is.na(airquality$Ozone))
+
+```
+
+### Exercise 1.18
+
+Using `airquality$Ozone`, calculate the mean — but first try it without removing NAs. What do you get? Then do it correctly with `na.rm = TRUE`.
+
+```{r}
+mean(airquality$Ozone)
+# get NA as a result
+mean(airquality$Ozone, na.rm = TRUE)
+
+```
+
+## Data Frames
+
+### Exercise 1.19
+
+Create a data frame from scratch representing 3 students: columns for `name` (character), `grade` (numeric), and `passing` (logical, where passing is `TRUE` if grade >= 60). Calculate the `passing` column based on the `grade` column rather than typing it manually.
+
+```{r}
+name <- c("Katie", "Luke", "Bella")
+grade <- c(98, 54, 82)
+passing <- grade >= 60
+grades <- data.frame(name, grade, passing)
+grades
+
+```
+
+### Exercise 1.20
+
+Use `nrow()`, `ncol()`, and `dim()` on the `airquality` dataset. What does each return, and how are they related?
+
+```{r}
+nrow(airquality) # number of rows/observations
+ncol(airquality) # number of variables
+dim(airquality) # the dimensions of the data frame, num of rows and variables
+
+```
+
+## Names
+
+### Exercise 1.21
+
+Take the vector `c(25000, 32000, 45000, 28000)` representing annual salaries. Assign the names `"Alice"`, `"Bob"`, `"Carol"`, and `"Dave"` using `names()`. Then extract just Bob's salary using the name.
+
+```{r}
+salary <- c(25000, 32000, 45000, 28000)
+names1 <- c
+
+```
+
+### Exercise 1.22
+
+Look at `mtcars`. The row names are actually the car names. Use `rownames()` to get them, and use `colnames()` to get the column names. Compare to what `names()` returns on `mtcars` — is it rows or columns?
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 2. Subsetting R Objects
+
+## Scenario: Exploring subsets of real data
+
+### Exercise 2.1
+
+From the `mtcars` dataset, extract just the first row using `[` indexing. What class is the result?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.2
+
+From `mtcars`, extract just the `mpg` column in three different ways: using `$`, using `[[`, and using `[` with a column name. Which one returns a data frame versus a vector?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.3
+
+From `mtcars`, extract all rows but only the columns `mpg`, `hp`, and `wt`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.4
+
+From `mtcars`, extract the rows for cars that get more than 25 mpg. (This should return a data frame.)
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.5
+
+From `mtcars`, extract the names of cars that have 8 cylinders AND weigh more than 4 (thousand lbs). Hint: you'll need to combine two logical conditions with `&`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.6
+
+Using `iris`, extract only the rows where the species is `"setosa"`. How many rows does that give you?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.7
+
+From `iris`, extract all rows where `Sepal.Length` is greater than 6 AND `Petal.Width` is greater than 2. What species are those flowers?
+
+```{r}
+# Your code here
+
+```
+
+## Subsetting a matrix
+
+### Exercise 2.8
+
+`state.x77` is a matrix. Extract just the `"Income"` column — use the column name, not the index. Then find the name of the state with the highest income. Hint: `which.max()` returns the index of the maximum value, and you can use `names()` or `rownames()` to find the state name.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.9
+
+From `state.x77`, extract a sub-matrix containing only the first 5 states and only the columns `"Population"` and `"Income"`. Make sure the result is still a matrix, not a vector.
+
+```{r}
+# Your code here
+
+```
+
+## Subsetting lists
+
+### Exercise 2.10
+
+Create a list representing a simple customer record:
+
+```r
+customer <- list(
+  name = "Alice",
+  orders = c(150, 89, 234, 45),
+  active = TRUE
+)
+```
+
+Extract the name in two different ways. Then extract the third order value using nested indexing.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.11
+
+Using the same `customer` list from above, extract the `orders` and `active` elements together as a smaller list (keep them as a list, don't flatten them). Hint: use single bracket `[` with a vector of names.
+
+```{r}
+# Your code here
+
+```
+
+## Removing NA Values
+
+### Exercise 2.12
+
+Using `airquality$Ozone`, extract only the non-missing values into a new vector called `ozone_clean`. Confirm it has no NAs by running `sum(is.na(ozone_clean))`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.13
+
+Use `complete.cases()` on the full `airquality` dataset to create a "clean" version with no missing values anywhere. How many rows does the clean version have compared to the original?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.14
+
+Using `airquality`, find the average `Ozone` value for days where `Temp` was above 80. Watch out for NAs in the Ozone column.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 3. Vectorized Operations
+
+## Scenario: Doing quick calculations on whole columns
+
+### Exercise 3.1
+
+The `women` dataset has `height` (in inches) and `weight` (in pounds). Using vectorized operations, create a new vector with heights converted to centimeters (multiply by 2.54).
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.2
+
+Using `women`, compute each person's BMI using the imperial formula: `BMI = (weight / height^2) * 703`. Do this in one line using vectorized operations — no loops. Store the result in a vector called `bmi_values`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.3
+
+Using `mtcars`, create a logical vector that's `TRUE` for cars that are both fuel-efficient (mpg > 20) AND lightweight (wt < 3). How many cars meet both criteria? (Use `sum()` on the logical vector.)
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.4
+
+Using `airquality`, calculate the temperature in Celsius for every row. Formula: `C = (F - 32) * 5/9`. Store it as a new column in a copy of the dataset.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.5
+
+Take `mtcars$mpg` and `mtcars$wt`. Using vectorized division, compute "miles per gallon per 1000 lbs" for each car (i.e., `mpg / wt`). Which car has the highest value? Hint: `which.max()` gives you the index, and `rownames(mtcars)` gives you the car names.
+
+```{r}
+# Your code here
+
+```
+
+## Vectorized Matrix Operations
+
+### Exercise 3.6
+
+Create two 2x2 matrices from `mtcars`: one from the `mpg` and `hp` columns of the first 2 cars, and one of all 10s (same dimensions). Do element-wise multiplication and compare to true matrix multiplication (`%*%`). What's different about the two results?
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# Mini Challenges
+
+## Challenge 1: Find the cars
+
+Using `mtcars`, find the names of all cars that have 4 cylinders AND manual transmission (`am == 1`). How many are there?
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 2: Species comparison
+
+Using `iris`, calculate the average `Petal.Length` for each of the three species. You don't need a fancy function for this — try subsetting the dataset three times (once per species) and using `mean()` on each. (In a future practice set we'll do this with `tapply()` in one line.)
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 3: Clean and summarize
+
+Using `airquality`, do the following in sequence:
+
+1. Create a version of the dataset with all NAs removed.
+2. From that cleaned version, extract only the rows where `Month == 7` (July).
+3. Calculate the average `Ozone` for July.
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 4: State rankings
+
+Using `state.x77`, find the 5 states with the highest `Illiteracy` rate. Hint: `order()` returns the indices that would sort a vector, and `order(x, decreasing = TRUE)` sorts from highest to lowest.
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 5: Custom column math
+
+Using `mtcars`, create a new vector called `power_to_weight` that is `hp / wt` for each car. Then extract the top 3 cars by this metric, showing their names and their power-to-weight values.
+
+```{r}
+# Your code here
+
+```
