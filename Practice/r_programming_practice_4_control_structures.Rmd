@@ -1,0 +1,956 @@
+---
+title: "R Programming Practice (Part 4): Control Structures"
+author: "Tim Irwin"
+date: "2026-04-27"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Practice (Part 4): Control Structures
+
+This practice set covers control structures from *R Programming for Data Science* by Roger D. Peng (pages 48–55):
+
+1. `if`/`else` statements
+2. `for` loops
+3. `while` loops
+4. `repeat`, `next`, and `break`
+
+Each section starts with a **lesson** that teaches the concept with a worked example, followed by **exercises** that apply what you just learned. The exercises **build on each other** — each one extends or combines the previous ones.
+
+You may want to start with:
+
+```{r}
+rm(list = ls())
+```
+
+> **Tip:** Read the lesson, run the example code in your console to see what it does, then try the exercise. If you get stuck, modify the lesson example line by line until you understand each piece.
+
+## Datasets used in this practice
+
+- `airquality` — Daily air quality measurements in New York, May–September 1973.
+- `mtcars` — Fuel consumption and 10 aspects of design/performance for 32 cars.
+- `iris` — Measurements of 150 iris flowers across 3 species.
+- `Nile` — Annual flow of the river Nile, 1871–1970 (a time series).
+
+---
+
+# 1. If/Else
+
+## Lesson 1.1: The basic `if` statement
+
+Control structures let you put **logic** into your code. The simplest is `if`, which runs a block of code only when a condition is true:
+
+```
+if (<condition>) {
+  ## do something
+}
+## continue with rest of code
+```
+
+Here's a complete example. Suppose you want to check whether a number is large:
+
+```{r}
+size <- 250
+
+if (size > 100) {
+  print("That's a large number!")
+}
+```
+
+If `size` were 50 instead, nothing would print — the `if` block simply gets skipped.
+
+The condition inside `if()` must be a single `TRUE` or `FALSE`. Comparison operators that produce these include `>`, `<`, `>=`, `<=`, `==` (equal), and `!=` (not equal).
+
+### Exercise 1.1
+
+Assign a number to a variable `x`. Write an `if` statement that prints `"x is positive"` if `x` is greater than 0. Don't worry about the negative case yet. Test it with `x <- 5`.
+
+```{r}
+x <- 71
+if(x > 0) {
+  print("x is positive")
+}
+
+```
+
+---
+
+## Lesson 1.2: Adding `else`
+
+If you want one thing to happen when the condition is true and a *different* thing when it's false, add an `else` clause:
+
+```
+if (<condition>) {
+  ## do something
+} else {
+  ## do something else
+}
+```
+
+Example:
+
+```{r}
+temperature <- 95
+
+if (temperature > 90) {
+  print("It's hot outside")
+} else {
+  print("It's not too hot")
+}
+```
+
+Exactly one of the two branches runs — never both, never neither.
+
+> **Tip:** The `else` keyword has to go on the **same line** as the closing `}` of the `if` block, not on a new line. Otherwise R thinks the `if` statement is finished and gets confused when it sees `else` on its own.
+
+### Exercise 1.2
+
+Extend Exercise 1.1: add an `else` clause that prints `"x is not positive"` when `x` is 0 or negative. Test it with both `x <- 5` and `x <- -3`.
+
+```{r}
+x1 <- 5
+x2 <- -3
+if(x1 > 0) {
+  print("x is positive")
+} else {
+  print("x is not positive")
+}
+
+if(x2 > 0) {
+  print("x is positive")
+} else {
+  print("x is not positive")
+}
+```
+
+---
+
+## Lesson 1.3: `else if` for multiple cases
+
+When you have more than two possibilities, chain them together with `else if`:
+
+```
+if (<condition1>) {
+  ## do something
+} else if (<condition2>) {
+  ## do something different
+} else {
+  ## fallback case
+}
+```
+
+Example: classifying a wind speed reading:
+
+```{r}
+wind <- 12
+
+if (wind < 5) {
+  print("calm")
+} else if (wind < 15) {
+  print("breezy")
+} else {
+  print("windy")
+}
+```
+
+R checks the conditions **in order from top to bottom** and runs the first one that's true. The `else` at the end catches anything that didn't match the earlier conditions.
+
+### Exercise 1.3
+
+Extend it again with `else if`: now handle three cases — positive, negative, and zero. Print a different message for each. Test with `x <- 5`, `x <- -3`, and `x <- 0`.
+
+```{r}
+x3 <- 5
+x4 <- -3
+x5 <- 0
+
+if(x3 > 0) {
+  print("x is positive")
+} else if (x3 < 0) {
+  print("x is negative")
+} else {
+  print("x is zero")
+}
+
+if(x4 > 0) {
+  print("x is positive")
+} else if (x4 < 0) {
+  print("x is negative")
+} else {
+  print("x is zero")
+}
+
+if(x5 > 0) {
+  print("x is positive")
+} else if (x5 < 0) {
+  print("x is negative")
+} else {
+  print("x is zero")
+}
+
+```
+
+---
+
+## Lesson 1.4: Applying logic to real data
+
+Once you understand the structure, you can apply it to values from a dataset. For example, looking at the first row's `Solar.R` value in `airquality`:
+
+```{r}
+solar <- airquality$Solar.R[1]
+print(solar)
+
+if (solar > 200) {
+  print("strong sunlight")
+} else if (solar > 100) {
+  print("moderate sunlight")
+} else {
+  print("weak sunlight")
+}
+```
+
+This pattern — read a value, classify it, decide what to do — is the foundation for the loops in the next sections.
+
+### Exercise 1.4
+
+Pick the first row of `airquality$Ozone` and print whether it's `"high"` (above 50), `"moderate"` (between 20 and 50), or `"low"` (below 20). Don't worry about NAs yet.
+
+```{r}
+ozone <- airquality$Ozone[1]
+
+if (ozone > 50) {
+  print("high")
+} else if (ozone < 20) {
+  print("low")
+} else {
+  print("moderate")
+}
+print(ozone)
+```
+
+---
+
+## Lesson 1.5: Handling `NA` values
+
+Real data has missing values, and comparisons with `NA` produce `NA` — which breaks `if` statements. Watch what happens:
+
+```r
+# This would error: "missing value where TRUE/FALSE needed"
+x <- NA
+if (x > 5) {
+  print("big")
+}
+```
+
+The fix is to **check for NA first** and handle it before any other comparisons:
+
+```{r}
+solar <- airquality$Solar.R[5]   # this row has NA
+
+if (is.na(solar)) {
+  print("missing")
+} else if (solar > 200) {
+  print("strong sunlight")
+} else if (solar > 100) {
+  print("moderate sunlight")
+} else {
+  print("weak sunlight")
+}
+```
+
+After the `is.na()` check, the rest of the code can safely assume the value isn't missing.
+
+> **Tip:** Always handle NA *before* doing comparisons. This is one of the most common sources of bugs in R code that works fine on clean data but breaks on real data.
+
+### Exercise 1.5
+
+Add NA handling to your code from Exercise 1.4. If the value is `NA`, print `"missing"` instead of trying to compare it. Test it on a row of `airquality$Ozone` that you know is missing (row 5 should work).
+
+```{r}
+ozone <- airquality$Ozone[5]
+
+if(is.na(ozone)) {
+  print("missing")
+} else if (ozone > 50) {
+  print("high")
+} else if (ozone < 20) {
+  print("low")
+} else {
+  print("moderate")
+}
+
+print(ozone)
+
+```
+
+---
+
+# 2. For Loops
+
+## Lesson 2.1: The basic `for` loop
+
+A `for` loop takes an iterator variable and assigns it successive values from a sequence, running its body once per value. The basic form:
+
+```
+for (<variable> in <sequence>) {
+  ## code that uses <variable>
+}
+```
+
+Example: print each of the days of a workout schedule:
+
+```{r}
+for (day in 1:5) {
+  print(day)
+}
+```
+
+Each iteration, `day` takes the next value from the sequence (1, 2, 3, 4, 5), and the body runs.
+
+> **Tip:** The variable name (`day` here) is up to you — pick something meaningful. Common conventions: `i`, `j`, `k` for indices, or descriptive names like `day` or `row` when iterating over real things.
+
+### Exercise 2.1
+
+Write a basic `for` loop that prints the numbers 1 through 5, each on its own line.
+
+```{r}
+for (k in 1:5) {
+  print(k)
+}
+
+```
+
+---
+
+## Lesson 2.2: Doing computation inside the loop
+
+The body of a `for` loop isn't limited to printing — it can do any calculation. Each iteration uses the current value of the iterator:
+
+```{r}
+for (n in 1:6) {
+  print(n * 10)   # multiply each n by 10 before printing
+}
+```
+
+This prints 10, 20, 30, 40, 50, 60 — one per iteration.
+
+### Exercise 2.2
+
+Modify Exercise 2.1: instead of printing the numbers themselves, print their squares (1, 4, 9, 16, 25).
+
+```{r}
+for (n in c(1, 4, 9, 16, 25)) {
+  print(n^2)
+}
+
+```
+
+---
+
+## Lesson 2.3: Looping over a real vector
+
+For loops are most often used to iterate over the elements of an actual vector. There are several ways to do this. The cleanest is `seq_along()`, which generates indices `1` through `length(x)`:
+
+```{r}
+fruits <- c("apple", "banana", "cherry", "date")
+
+for (i in seq_along(fruits)) {
+  print(fruits[i])
+}
+```
+
+Each iteration, `i` is 1, 2, 3, then 4, and `fruits[i]` pulls out the corresponding element.
+
+You can also iterate over the values directly without an index:
+
+```{r}
+for (fruit in fruits) {
+  print(fruit)
+}
+```
+
+Both produce the same output. Use the index version when you need to track position; use the direct version when you just need the values.
+
+### Exercise 2.3
+
+Loop through `mtcars$mpg` and print each value. Use `seq_along()` for the index.
+
+```{r}
+for (i in seq_along(mtcars$mpg)) {
+  print(mtcars$mpg[i])
+}
+
+```
+
+---
+
+## Lesson 2.4: Combining the index with related data
+
+A common need: when you're indexed into one vector, you often want to grab the matching element from another. Here's an example using two parallel vectors:
+
+```{r}
+products <- c("Bread", "Milk", "Eggs")
+prices <- c(3.50, 4.25, 5.99)
+
+for (i in seq_along(products)) {
+  message <- paste0(products[i], " costs $", prices[i])
+  print(message)
+}
+```
+
+The same `i` indexes both vectors, so on each iteration we get the matching product–price pair.
+
+### Exercise 2.4
+
+Extend Exercise 2.3: also print the car name alongside each mpg value, like `"Mazda RX4: 21 mpg"`. Hint: `rownames(mtcars)` gives you the car names, and you'll want to use the loop index to grab the matching name and mpg.
+
+```{r}
+for (i in seq_along(rownames(mtcars))) {
+  message <- paste0(rownames(mtcars)[i], ":", mtcars$mpg[i], " mpg")
+  print(message)
+}
+
+```
+
+---
+
+## Lesson 2.5: Combining `for` and `if/else`
+
+This is where loops become truly useful — putting logic inside the body of a loop so each element gets classified or handled differently:
+
+```{r}
+ages <- c(15, 22, 67, 8, 45, 71)
+
+for (age in ages) {
+  if (age < 18) {
+    print(paste(age, "- minor"))
+  } else if (age >= 65) {
+    print(paste(age, "- senior"))
+  } else {
+    print(paste(age, "- adult"))
+  }
+}
+```
+
+For each age in the vector, we evaluate the if/else chain and print the appropriate label.
+
+### Exercise 2.5
+
+Loop through `mtcars$mpg` and print whether each car is `"efficient"` (mpg > 25), `"average"` (15–25), or `"thirsty"` (below 15). Include the car name in the output.
+
+```{r}
+for (i in seq_along(mtcars$mpg)) {
+  if (mtcars$mpg[i] > 25) {
+    print(paste(rownames(mtcars)[i], "- efficient"))
+  } else if (mtcars$mpg[i] < 15) {
+    print(paste(rownames(mtcars)[i], "- thirsty"))
+  } else {
+    print(paste(rownames(mtcars)[i], "- average"))
+  }
+}
+
+```
+
+---
+
+## Lesson 2.6: Storing results instead of printing
+
+Often you don't want to print results — you want to **store** them so you can use them later. The pattern is to pre-allocate a result vector and fill it in by index:
+
+```{r}
+ages <- c(15, 22, 67, 8, 45, 71)
+labels <- character(length(ages))   # pre-allocate
+
+for (i in seq_along(ages)) {
+  if (ages[i] < 18) {
+    labels[i] <- "minor"
+  } else if (ages[i] >= 65) {
+    labels[i] <- "senior"
+  } else {
+    labels[i] <- "adult"
+  }
+}
+
+labels                # the stored result
+table(labels)         # counts of each category
+```
+
+Pre-allocating with `character(length(ages))` creates an empty vector of the right size to fill in. This is more efficient than growing a vector inside the loop.
+
+> **Tip:** Pre-allocation also makes the code clearer — you can see at a glance how big the result will be. For numeric results, use `numeric(length(x))`; for logical, `logical(length(x))`.
+
+### Exercise 2.6
+
+Modify Exercise 2.5 to store the classifications in a character vector called `categories` instead of printing them. After the loop, run `table(categories)` to see how many cars fell into each group.
+
+```{r}
+categories <- character(length(mtcars$mpg))
+
+for (i in seq_along(mtcars$mpg)) {
+  if (mtcars$mpg[i] > 25) {
+    categories[i] <- "efficient"
+  } else if (mtcars$mpg[i] < 15) {
+    categories[i] <- "thirsty"
+  } else {
+    categories[i] <- "average"
+  }
+}
+
+categories
+table(categories)
+
+```
+
+---
+
+## Lesson 2.7: Nested loops
+
+You can put a `for` loop inside another `for` loop. This is useful when you have hierarchical data or two-dimensional structures:
+
+```{r}
+# A small grid: 2 rows, 3 columns
+grid <- matrix(c(10, 20, 30, 40, 50, 60), nrow = 2)
+grid
+
+# Print every cell, going row by row, column by column
+for (i in seq_len(nrow(grid))) {
+  for (j in seq_len(ncol(grid))) {
+    print(paste("Row", i, "Col", j, "=", grid[i, j]))
+  }
+}
+```
+
+The outer loop runs once per row; the inner loop runs through every column for each row. So the total iterations is rows × columns.
+
+> **Tip:** Be careful with nested loops — they can quickly get hard to read. The book suggests not nesting beyond 2–3 levels. If you find yourself needing deep nesting, that's a sign you should refactor into functions.
+
+### Exercise 2.7
+
+Loop over the 5 months in `airquality` (5 through 9), and inside that loop, loop over each day in that month and count how many days had `Temp` above 80. Print one line per month showing the count, like `"Month 5: 3 hot days"`.
+
+Hint: you can subset to one month at a time with `airquality[airquality$Month == m, ]` and then loop over its rows.
+
+```{r}
+for (m in 5:9) {                                        # outer loop: one iteration per month
+  month_data <- airquality[airquality$Month == m, ]    # subset to just this month's rows
+  count <- 0                                            # reset counter for each new month
+  for (i in seq_along(month_data$Temp)) {              # inner loop: one iteration per day
+    if (month_data$Temp[i] > 80) {                     # check this day's temp
+      count <- count + 1                               # increment if condition is met
+    }
+  }                                                     # inner loop ends
+  print(paste0("Month ", m, ": ", count, " hot days")) # print after all days checked
+}                                                       # outer loop ends, m advances
+```
+
+---
+
+# 3. While Loops
+
+## Lesson 3.1: The basic `while` loop
+
+A `while` loop tests a condition before each iteration. As long as the condition is true, the loop body keeps running. Once it's false, the loop exits:
+
+```{r}
+balance <- 100
+
+while (balance > 0) {
+  print(balance)
+  balance <- balance - 25   # withdraw 25 each iteration
+}
+```
+
+This prints 100, 75, 50, 25, then stops because the condition `balance > 0` becomes false (balance is now 0).
+
+> **Warning:** `while` loops can run forever if the condition never becomes false. Always make sure something inside the loop changes the condition. If you find yourself with a runaway loop in RStudio, hit the **Esc** key (or click the red stop sign) to interrupt it.
+
+### Exercise 3.1
+
+Write a `while` loop that starts with `x <- 1` and doubles `x` each iteration, printing the value, until `x` exceeds 100. (You should see 1, 2, 4, 8, 16, 32, 64.)
+
+```{r}
+x <- 1
+while(x <= 100) {
+  print(x)
+  x <- x * 2
+}
+
+```
+
+---
+
+## Lesson 3.2: Counting iterations
+
+Sometimes you don't just want the loop's effect — you want to know how many iterations it took. Track that with a counter:
+
+```{r}
+balance <- 100
+withdrawals <- 0
+
+while (balance > 0) {
+  balance <- balance - 25
+  withdrawals <- withdrawals + 1   # count this iteration
+}
+
+print(withdrawals)
+```
+
+The counter `withdrawals` starts at 0 and gets incremented each iteration. After the loop, it tells you how many iterations ran.
+
+### Exercise 3.2
+
+Modify Exercise 3.1: instead of stopping when `x` exceeds 100, count how many doublings it takes. Store the count in a variable called `doublings` and print it at the end.
+
+```{r}
+x <- 1
+doublings <- 0
+
+x <- 1
+while(x <= 100) {
+  x <- x * 2
+  doublings <- doublings + 1
+}
+
+print(doublings)
+```
+
+---
+
+## Lesson 3.3: Searching through real data
+
+A classic use of `while`: search for the first element that meets a condition. Stop as soon as you find it:
+
+```{r}
+# Find the first month in airquality where Temp exceeds 90
+i <- 1
+while (airquality$Temp[i] <= 90) {
+  i <- i + 1
+}
+
+# Now i is the index of the first day with Temp > 90
+print(i)
+print(airquality[i, ])
+```
+
+The pattern: start with an index of 1, increment it each iteration as long as the condition isn't met, stop when it is. After the loop, `i` is sitting on the first match.
+
+### Exercise 3.3
+
+The `Nile` dataset records annual river flow from 1871 to 1970. Use a `while` loop to find the **first year** where the flow drops below 700. Print the year and the flow value when you find it.
+
+Hint: convert to a regular vector with `flow <- as.numeric(Nile)` and get the years with `years <- as.numeric(time(Nile))`. Use an index variable that starts at 1 and increments each iteration.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 3.4: Multiple conditions in the test
+
+The condition in a `while` can combine multiple tests using `&&` (and) or `||` (or):
+
+```{r}
+x <- 10
+attempts <- 0
+
+# Keep going while x is in range AND we haven't tried too many times
+while (x > 0 && attempts < 5) {
+  x <- x - 2
+  attempts <- attempts + 1
+}
+
+print(x)
+print(attempts)
+```
+
+The loop exits as soon as **either** condition fails. This pattern — combining a "real" condition with a safety limit — is a great defense against accidentally creating infinite loops.
+
+> **Tip:** Use `&&` and `||` for single TRUE/FALSE conditions in control structures. The single-character versions `&` and `|` work element-wise on vectors and aren't quite right for `if` and `while`. Conditions are evaluated left to right — if the first one fails with `&&`, R doesn't even check the second.
+
+### Exercise 3.4
+
+Write a `while` loop that:
+
+- Starts with `x <- 50`
+- Each iteration, multiplies `x` by a random number from `runif(1, 0.8, 1.2)` (uniform between 0.8 and 1.2)
+- Stops when `x` either exceeds 100 OR when 1000 iterations have passed (whichever comes first)
+- Prints the final value of `x` and how many iterations it took
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 4. Repeat, Next, and Break
+
+## Lesson 4.1: `repeat` and `break`
+
+`repeat` is an infinite loop — there's no condition to test. The only way to stop it is to call `break` from inside:
+
+```
+repeat {
+  ## do something
+  if (<some condition>) {
+    break
+  }
+}
+```
+
+`break` immediately exits the loop, no matter where it's called from. Here's the same doubling example from before, but using `repeat` and `break`:
+
+```{r}
+x <- 1
+
+repeat {
+  print(x)
+  x <- x * 2
+  if (x > 100) {
+    break   # exit the loop
+  }
+}
+```
+
+Anything you can write with `while`, you can write with `repeat` + `break`. The choice is mostly stylistic — `while` makes the exit condition obvious at the top; `repeat` puts the action first and the exit condition wherever it makes sense.
+
+### Exercise 4.1
+
+Rewrite Exercise 3.1 (doubling x until it exceeds 100) using `repeat` and `break` instead of `while`. The output should be identical.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 4.2: `next` for skipping iterations
+
+`next` doesn't end a loop — it just **skips to the next iteration**, ignoring the rest of the current iteration's body:
+
+```{r}
+# Print numbers 1-10, but skip multiples of 3
+for (i in 1:10) {
+  if (i %% 3 == 0) {
+    next   # skip this iteration
+  }
+  print(i)
+}
+```
+
+The output is 1, 2, 4, 5, 7, 8, 10 — the multiples of 3 (3, 6, 9) get skipped. The `%%` operator is **modulo** — it returns the remainder after division. So `i %% 3 == 0` is true exactly when `i` is divisible by 3.
+
+> **Tip:** `next` is most useful for filtering as you loop. Instead of writing nested if/else, you can put "skip this if X" logic at the top of the loop body and let the rest run for everything else.
+
+### Exercise 4.2
+
+Write a `for` loop over `1:20` that prints only the **odd** numbers — use `next` to skip the even ones. Hint: `i %% 2 == 0` checks if `i` is even.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 4.3: Combining `next` and `break`
+
+You can use both in the same loop. `next` says "skip this one"; `break` says "stop entirely":
+
+```{r}
+for (i in 1:30) {
+  if (i %% 4 == 0) next       # skip multiples of 4
+  if (i > 20) break            # stop after 20
+  print(i)
+}
+```
+
+The output is 1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19. Multiples of 4 are skipped, and the loop terminates once `i` exceeds 20.
+
+### Exercise 4.3
+
+Loop through `1:50`:
+
+- Skip multiples of 5 using `next`
+- Stop the loop entirely (using `break`) when you hit a number greater than 30
+- Print every number that doesn't get skipped
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 4.4: `next` for handling NAs
+
+A natural use of `next` in real data: skip missing values rather than letting them break your computation:
+
+```{r}
+solar_vals <- airquality$Solar.R
+
+for (i in seq_along(solar_vals)) {
+  if (is.na(solar_vals[i])) {
+    next   # skip NA, don't try to compare or print it
+  }
+  if (i > 10) break   # just keep the output short for the lesson
+  print(paste("Day", i, "Solar:", solar_vals[i]))
+}
+```
+
+This is cleaner than nesting all your real logic inside an `else` clause of an `is.na()` check.
+
+### Exercise 4.4
+
+Loop through `airquality$Ozone` and print each value — but use `next` to skip any `NA` values. Use `seq_along()` for the index.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 4.5: Accumulating results in a loop
+
+A very common pattern: loop through values, skip the bad ones, and accumulate a running total or count. This lets you compute things like averages while ignoring missing values:
+
+```{r}
+solar_vals <- airquality$Solar.R
+total <- 0
+count <- 0
+
+for (i in seq_along(solar_vals)) {
+  if (is.na(solar_vals[i])) {
+    next
+  }
+  total <- total + solar_vals[i]
+  count <- count + 1
+}
+
+print(total / count)
+print(mean(solar_vals, na.rm = TRUE))   # should match
+```
+
+Both `total` and `count` start at 0. We only update them for non-NA values. After the loop, `total / count` is the mean of the non-missing values.
+
+### Exercise 4.5
+
+Extend Exercise 4.4: as you loop, **accumulate** a running sum of the non-NA Ozone values into a variable called `total`, and a count of how many values you summed into `count`. After the loop, print the average (`total / count`). Compare to `mean(airquality$Ozone, na.rm = TRUE)` — they should match.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 4.6: `repeat` + `break` for find-first patterns
+
+`repeat` works well when you want to keep going until you find something. The loop has no fixed length, but you know what you're looking for:
+
+```{r}
+# Find the first day in airquality where Wind exceeds 18
+i <- 1
+repeat {
+  if (airquality$Wind[i] > 18) {
+    print(paste("Found at row", i, "- Wind:", airquality$Wind[i]))
+    break
+  }
+  i <- i + 1
+}
+```
+
+The structure: increment an index each iteration, check the condition, exit with `break` when found.
+
+### Exercise 4.6
+
+Use `repeat` with `break` to find the **first** day in `airquality` where `Temp` exceeds 90. Print the row index, the month, the day, and the temperature.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# Mini Challenges
+
+These tie everything together. Each one combines multiple control structures.
+
+## Challenge 1: Classify all the irises
+
+Loop through every row of `iris` and classify each flower's `Petal.Length` as `"small"` (< 2), `"medium"` (2–5), or `"large"` (≥ 5). Store the results in a vector. Then use `table()` to see how many flowers fall into each category.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 2: First exceedance per month
+
+For each month in `airquality` (5 through 9), find the **first day** that month where `Ozone` exceeded 50. If a month has no such day (or all values are NA), report that no exceedance was found. Print one line per month.
+
+This combines: outer `for` loop over months, inner `for` or `while` loop over days, `if/else` for the comparison, and `break` to stop searching once you find one.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 3: Running max with reset
+
+Imagine you're tracking a running maximum of `mtcars$mpg`, but you "reset" the running max to 0 every time you encounter a car with 8 cylinders. Loop through the cars in order and store the running max at each step in a vector called `running_max`.
+
+So if mpg values are `c(21, 21, 22, 18, 19)` and the corresponding cyl values are `c(6, 6, 4, 8, 6)`, the running max would be `c(21, 21, 22, 0, 19)` — the 8-cylinder car triggers a reset before its own value is considered.
+
+This combines `for`, `if/else`, and updating state across iterations.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 4: Convergence
+
+Write a loop that simulates a simple "convergence" check. Start with `x <- 100`. Each iteration, replace `x` with `(x + 10/x) / 2` (this is a step in Newton's method for finding √10). Use `repeat` with `break`, and stop when the change between iterations is smaller than `0.0001`.
+
+Print every iteration's value, and at the end print how many iterations it took. The final value should be very close to `sqrt(10)`.
+
+Hint: you'll need to track the previous value of `x` to compare against. `abs()` gives you absolute value.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 5: Skip, count, summarize
+
+Loop through `airquality$Wind`. For each value:
+
+- If it's `NA`, use `next` to skip it
+- If it's greater than 15, use `break` to stop the loop entirely
+- Otherwise, add it to a running total and increment a counter
+
+After the loop, print:
+
+- The number of values you summed
+- The average (total / count)
+- The index where the loop stopped (or "completed" if it made it through the whole vector)
+
+```{r}
+# Your code here
+
+```

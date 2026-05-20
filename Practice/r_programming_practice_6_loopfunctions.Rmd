@@ -1,0 +1,617 @@
+---
+title: "R Programming Practice (Part 6): Loop Functions"
+author: "Tim Irwin"
+date: "2026-04-27"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Practice (Part 6): Loop Functions
+
+This practice set covers the loop functions from *R Programming for Data Science* by Roger D. Peng (pages 75–93). These are the functions that let you apply operations across whole data structures in one compact line, instead of writing multi-line `for` loops.
+
+The five functions covered here, in the order they're presented in the book:
+
+1. **`lapply()`** — Loop over a list, apply a function to each element, return a list.
+2. **`split()`** — Split a vector or data frame into groups defined by a factor.
+3. **`tapply()`** — Apply a function over subsets of a vector (essentially split + apply combined).
+4. **`apply()`** — Apply a function over the rows or columns of a matrix.
+5. **`mapply()`** — Apply a function in parallel over multiple vectors.
+
+Each section starts with a **lesson** that teaches the concept with a worked example, followed by **exercises** that apply it on built-in datasets. Sections build on each other — `split` + `lapply` lead naturally into `tapply`, and ideas from earlier sections recur in the mini challenges.
+
+You may want to start with:
+
+```{r}
+rm(list = ls())
+```
+
+> **Tip:** Read the lesson, run the example code in your console to see what each function returns, then attempt the exercise. The output structure (list vs. vector vs. matrix) is often the trickiest part — if you're unsure, run `class()` on the result.
+
+## Datasets used in this practice
+
+- `mtcars` — Fuel consumption and 10 design/performance attributes for 32 cars.
+- `iris` — Measurements of 150 iris flowers across 3 species.
+- `airquality` — Daily air quality measurements in New York, May–September 1973.
+- `state.x77` — A matrix of statistics on U.S. states (population, income, illiteracy, etc.).
+- `ChickWeight` — Weight of chicks on different diets over time.
+
+---
+
+# 1. `lapply()`
+
+## Lesson 1.1: What `lapply()` does
+
+`lapply()` does three things:
+
+1. Loops over a list, taking each element one at a time
+2. Applies a function (that you supply) to each element
+3. Returns a **list** of results — always a list, regardless of what the function returns
+
+The signature is `lapply(X, FUN, ...)`:
+
+- `X` is the list to loop over (if it's not a list, R coerces it to one)
+- `FUN` is the function to apply
+- `...` is for extra arguments to pass to `FUN`
+
+Here's a basic example. Suppose you have a list of numeric vectors and you want the mean of each:
+
+```{r}
+my_list <- list(
+  weekend_steps = c(8500, 9200, 12000),
+  weekday_steps = c(6500, 7000, 7800, 6900, 7400)
+)
+
+lapply(my_list, mean)
+```
+
+Notice three things:
+
+- We pass `mean` (without parentheses) — we're handing the function itself to `lapply()`, not calling it.
+- The names from the input list (`weekend_steps`, `weekday_steps`) are preserved in the output.
+- The result is a list, even though each element is a single number.
+
+> **Tip:** `sapply()` is `lapply()`'s simpler cousin — it tries to **simplify** the output to a vector or matrix when possible. So `sapply(my_list, mean)` would return a named numeric vector instead of a list. Use `sapply()` when the output is regular and you want it tidied up; use `lapply()` when you want the list structure preserved.
+
+### Exercise 1.1
+
+Create a list containing three numeric vectors of different lengths (any data you like). Use `lapply()` to find the maximum value in each vector.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 1.2: Passing extra arguments through `...`
+
+What if the function you're applying needs additional arguments? For example, `mean()` has an `na.rm` argument. You can pass it through `lapply()`'s `...` argument:
+
+```{r}
+incomes <- list(
+  jan = c(3200, NA, 4100, 3800),
+  feb = c(3300, 4200, NA, 3900),
+  mar = c(3400, 4300, 4000, NA)
+)
+
+# Without na.rm, NAs propagate
+lapply(incomes, mean)
+
+# With na.rm passed through ...
+lapply(incomes, mean, na.rm = TRUE)
+```
+
+Any named arguments you supply after the function get forwarded to the function each time it's called.
+
+### Exercise 1.2
+
+The `airquality` dataset has missing values in `Ozone` and `Solar.R`. Build a list containing these two columns, then use `lapply()` with `mean` and `na.rm = TRUE` to get the mean of each, ignoring NAs.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 1.3: Anonymous functions
+
+Sometimes the function you want to apply isn't built-in and isn't worth defining separately. You can create an **anonymous function** right inside the `lapply()` call:
+
+```{r}
+test_scores <- list(
+  alice = c(82, 91, 78, 88),
+  bob = c(74, 68, 71, 80),
+  carol = c(95, 92, 89, 94)
+)
+
+# Anonymous function: range of each person's scores (max - min)
+lapply(test_scores, function(s) max(s) - min(s))
+```
+
+The `function(s) max(s) - min(s)` part is a function with no name — it exists only for this one call. Inside the function body, `s` refers to whichever element of the list we're currently on.
+
+> **Tip:** Anonymous functions are great for one-off operations. If the logic gets long or you'll reuse it, define a named function separately.
+
+### Exercise 1.3
+
+Use `lapply()` with an anonymous function to compute the **range** (max minus min) of each numeric column of `mtcars`. Hint: a data frame *is* a list of columns, so you can pass `mtcars` directly to `lapply()`.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 1.4: `lapply()` over a sequence
+
+A common trick: you can loop over a sequence of integers and use the iterator as input to a function. For example, generating samples of different sizes:
+
+```{r}
+# Generate samples of size 2, 4, and 6 from values 1-100
+sample_sizes <- c(2, 4, 6)
+lapply(sample_sizes, sample, x = 1:100)
+```
+
+Here `sample()` gets called three times — once with `size = 2`, once with `size = 4`, once with `size = 6`. The values from `sample_sizes` get passed as the *first* unnamed argument to `sample()`, which is `size`. We then pass `x = 1:100` through `...` so each call samples from the same vector.
+
+### Exercise 1.4
+
+Use `lapply()` to extract the first 3 rows of `mtcars`, `iris`, and `airquality` (a list of three data frames). Hint: if you put the three data frames into a list, you can apply `head()` with `n = 3` to each.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 2. `split()`
+
+## Lesson 2.1: What `split()` does
+
+`split()` divides a vector or data frame into groups based on a factor. It returns a **list** where each element is one group's data.
+
+The signature is `split(x, f)`:
+
+- `x` is what you want to split (vector or data frame)
+- `f` is the factor (or coerced to one) defining the groups
+
+Here's an example. The `iris` dataset has a `Species` column with three levels — let's split the dataset by species:
+
+```{r}
+iris_by_species <- split(iris, iris$Species)
+
+# What we get back is a list of three data frames
+class(iris_by_species)
+names(iris_by_species)
+
+# Each element is the rows for one species
+head(iris_by_species$setosa, 3)
+```
+
+Each element of the resulting list is a complete data frame — just filtered down to one species.
+
+You can also split a single vector by a factor:
+
+```{r}
+# Split the Sepal.Length values by species
+sepals_split <- split(iris$Sepal.Length, iris$Species)
+sepals_split
+```
+
+The result is a list of three numeric vectors — one per species.
+
+### Exercise 2.1
+
+Use `split()` to divide the `mtcars` dataset into groups based on the number of cylinders (`cyl`). The result should be a list with three elements (4-cylinder, 6-cylinder, and 8-cylinder cars). Confirm the structure with `names()` on the result.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 2.2: The split + lapply pattern
+
+The real power of `split()` shows up when you combine it with `lapply()`. Once you've split data into groups, you can apply a function to each group:
+
+```{r}
+# Step 1: split
+sepals_by_species <- split(iris$Sepal.Length, iris$Species)
+
+# Step 2: apply
+lapply(sepals_by_species, mean)
+```
+
+Or, more compactly, in a single line:
+
+```{r}
+lapply(split(iris$Sepal.Length, iris$Species), mean)
+```
+
+Read this from the inside out: first split the vector by species, then apply `mean` to each piece.
+
+> **Tip:** "Split, apply, combine" is one of the fundamental patterns in data analysis. R has a built-in shortcut for the vector case (`tapply()`, coming next) and entire packages (`dplyr`, `data.table`) built around making it more convenient.
+
+### Exercise 2.2
+
+Using your split from Exercise 2.1, use `lapply()` to compute the **average horsepower (`hp`)** for cars in each cylinder group. Hint: each element of your split is a full data frame, so your function will need to extract the `hp` column from it.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 3. `tapply()`
+
+## Lesson 3.1: What `tapply()` does
+
+`tapply()` is essentially **`split()` + `sapply()` rolled into one**, but only for vectors. If you find yourself doing `lapply(split(x, f), some_function)` often, `tapply()` is the shortcut.
+
+The signature is `tapply(X, INDEX, FUN, ...)`:
+
+- `X` is the vector
+- `INDEX` is the grouping factor
+- `FUN` is the function to apply
+- `...` is for extra arguments to `FUN`
+
+Here's the same calculation we did with split + lapply, but in one call:
+
+```{r}
+# Mean Sepal.Length per species, the lapply way:
+lapply(split(iris$Sepal.Length, iris$Species), mean)
+
+# The tapply way:
+tapply(iris$Sepal.Length, iris$Species, mean)
+```
+
+Notice the output difference: `tapply()` simplifies the result to a named numeric vector by default, while `lapply()` returns a list. When the function returns a single number per group, this is much cleaner.
+
+### Exercise 3.1
+
+Using `tapply()`, compute the average `mpg` for each cylinder group in `mtcars`. The result should be a named vector showing average mpg for 4-, 6-, and 8-cylinder cars.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.2
+
+Using `tapply()` on the `airquality` dataset, compute the average `Temp` for each `Month`. Make sure to handle NAs by passing `na.rm = TRUE`.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 3.2: When the function returns more than one value
+
+If the function returns multiple values per group, `tapply()` can't simplify to a vector and returns a list instead:
+
+```{r}
+# range() returns two values: min and max
+tapply(iris$Sepal.Length, iris$Species, range)
+```
+
+Each list element is a length-2 vector containing the min and max for that species.
+
+### Exercise 3.3
+
+Using `tapply()` on `ChickWeight`, get the **range** of weights for each diet (the `Diet` column). The result will be a list since `range()` returns two values per group.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 4. `apply()`
+
+## Lesson 4.1: What `apply()` does
+
+`apply()` is for **matrices and arrays** — it applies a function over the rows or columns. It's not really about looping over a list; it's about computing something for every row or column at once.
+
+The signature is `apply(X, MARGIN, FUN, ...)`:
+
+- `X` is the matrix (or array)
+- `MARGIN` is `1` for rows, `2` for columns
+- `FUN` is the function to apply
+- `...` is for extra arguments
+
+Here's the trick that confuses many people: the `MARGIN` argument tells `apply()` which dimension to **preserve**, not which to iterate over. So `MARGIN = 2` means "preserve the columns" — which means apply the function to each column, collapsing the rows down to one value per column.
+
+`state.x77` is a built-in matrix of state statistics. Let's compute the mean of each column:
+
+```{r}
+class(state.x77)        # confirm it's a matrix
+dim(state.x77)          # 50 states × 8 statistics
+
+# Mean of each column (preserve columns, collapse rows)
+apply(state.x77, 2, mean)
+```
+
+Now the mean of each row (mostly nonsensical here, but illustrative):
+
+```{r}
+# First few rows only, to keep output short
+apply(state.x77[1:5, ], 1, mean)
+```
+
+> **Tip:** For row/column means and sums, R has shortcuts: `rowMeans()`, `colMeans()`, `rowSums()`, `colSums()`. They're faster and more readable than `apply()` for those specific operations. Use `apply()` when you need a different function (median, sd, custom logic, etc.).
+
+### Exercise 4.1
+
+Use `apply()` on `state.x77` to find the **maximum value** in each column. The result should be a named numeric vector showing the highest population, highest income, etc.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 4.2
+
+Convert the first 5 rows of `mtcars` to a matrix using `as.matrix()`, then use `apply()` to compute the **standard deviation** of each column. (The SD function is `sd()`.)
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 4.2: Passing extra arguments
+
+Just like `lapply()`, `apply()` accepts extra arguments via `...` that get forwarded to the function. A common case is using `quantile()` to get specific percentiles:
+
+```{r}
+# Get the 25th and 75th percentile of each column of state.x77
+apply(state.x77, 2, quantile, probs = c(0.25, 0.75))
+```
+
+Here `probs = c(0.25, 0.75)` gets passed to `quantile()` each time it's called. The result is a matrix where each column has two values (the two percentiles).
+
+### Exercise 4.3
+
+Using `apply()` on `state.x77`, get the **5th and 95th percentile** of each column. Hint: it's the same pattern as the lesson example, just different `probs` values.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 4.3: Anonymous functions with `apply()`
+
+When you need custom logic, anonymous functions work the same way as with `lapply()`:
+
+```{r}
+# For each column, compute the ratio of max to min
+apply(state.x77, 2, function(col) max(col) / min(col))
+```
+
+This shows you how spread out each variable is — Population has a much larger ratio than, say, Life Exp, because state populations vary much more than life expectancy.
+
+### Exercise 4.4
+
+Using `apply()` with an anonymous function, compute the **range** (max minus min) of each column of `state.x77`.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 5. `mapply()`
+
+## Lesson 5.1: What `mapply()` does
+
+`mapply()` is the **multivariate** version of `lapply()`. While `lapply()` iterates over one list, `mapply()` iterates over **multiple** lists or vectors **in parallel**, applying a function to corresponding elements.
+
+The signature is different from the others — the function comes first:
+
+`mapply(FUN, ..., MoreArgs = NULL, SIMPLIFY = TRUE)`
+
+- `FUN` is the function to apply
+- `...` contains the vectors/lists to iterate over (one per function argument)
+- `MoreArgs` is a list of extra arguments shared across all calls
+- `SIMPLIFY` controls whether the result gets simplified (like `sapply()`)
+
+Here's a simple example. Suppose I want to compute the BMI for several people, each with their own weight and height:
+
+```{r}
+weights <- c(150, 165, 180, 200)   # pounds
+heights <- c(65, 70, 68, 72)       # inches
+
+# Imperial BMI formula
+bmi <- function(w, h) {
+  (w / h^2) * 703
+}
+
+mapply(bmi, weights, heights)
+```
+
+`mapply()` calls `bmi()` four times: `bmi(150, 65)`, `bmi(165, 70)`, `bmi(180, 68)`, `bmi(200, 72)`. The first vector feeds the first argument, the second vector feeds the second argument, etc.
+
+> **Note:** This particular case could be done with vectorized arithmetic: `(weights / heights^2) * 703`. `mapply()` is most useful when the function isn't already vectorized — that is, when calling it on the whole vector wouldn't do what you want.
+
+### Exercise 5.1
+
+Write a function `pct_change(old, new)` that returns the percent change from `old` to `new`: `((new - old) / old) * 100`. Then use `mapply()` to apply it to two vectors:
+
+```r
+old_prices <- c(50, 75, 100, 200)
+new_prices <- c(55, 70, 110, 195)
+```
+
+The result should be a vector of percent changes for each pair.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 5.2: Using `MoreArgs` for shared parameters
+
+When all calls should use the same extra argument, use `MoreArgs`:
+
+```{r}
+# Function: round a number to a given number of decimal places
+my_round <- function(x, digits) {
+  round(x, digits)
+}
+
+values <- c(3.14159, 2.71828, 1.41421)
+decimals <- c(2, 3, 4)
+
+# Each value gets rounded to its corresponding decimal place
+mapply(my_round, values, decimals)
+```
+
+If instead you wanted to round all three values to the *same* number of decimals, you'd put it in `MoreArgs`:
+
+```{r}
+mapply(my_round, values, MoreArgs = list(digits = 2))
+```
+
+### Exercise 5.2
+
+Write a function `weighted_score(score, weight)` that returns `score * weight`. Use `mapply()` to apply it to a vector of scores `c(85, 92, 78, 88)` paired with weights `c(0.2, 0.3, 0.2, 0.3)`.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Lesson 5.3: Vectorizing a non-vectorized function
+
+A nice use of `mapply()` is to "vectorize" a function that wasn't designed to handle vectors. Suppose you wrote this earlier:
+
+```{r}
+classify <- function(x) {
+  if (is.na(x)) {
+    "missing"
+  } else if (x > 0) {
+    "positive"
+  } else if (x < 0) {
+    "negative"
+  } else {
+    "zero"
+  }
+}
+```
+
+This works on one number at a time. If you call `classify(c(-1, 0, 1))`, the `if` statement fires a warning and only uses the first element — not what you want. You can wrap it with `mapply()` to apply it element-by-element:
+
+```{r}
+mapply(classify, c(-5, 0, 3, NA, 7))
+```
+
+This works because `mapply()` calls `classify()` separately on each value.
+
+### Exercise 5.3
+
+Write a function `temp_label(temp)` that returns `"hot"` if `temp > 80`, `"cold"` if `temp < 60`, and `"mild"` otherwise. Use `mapply()` to apply it to `airquality$Temp` (just the first 10 values is fine).
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# Mini Challenges
+
+These tie everything together — each one combines multiple loop functions or layers them in interesting ways.
+
+## Challenge 1: Group means three ways
+
+Compute the average `Petal.Length` for each species in `iris` three different ways:
+
+1. Using `split()` + `lapply()`
+2. Using `tapply()`
+3. Using a `for` loop (just to remind yourself what these functions are saving you from)
+
+Confirm all three approaches give the same numeric values.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 2: Multi-stat summary by group
+
+Using the `airquality` dataset, compute a **multi-statistic summary** (mean, median, and max) of `Wind` for each month. Use `tapply()` with an anonymous function that returns a named vector of the three statistics.
+
+The result will be a list (since the function returns multiple values per group).
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 3: Custom summary across columns
+
+Use `apply()` (or `lapply()` — your choice, but think about which output structure you'd prefer) to compute, for each numeric column of `mtcars`, a named vector with: minimum, mean, and maximum. The output should let you easily see "for `mpg`, min is X, mean is Y, max is Z."
+
+Hint: write a small helper function that takes a vector and returns the three stats as a named vector, then apply it across columns.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 4: ChickWeight analysis
+
+The `ChickWeight` dataset records chick weights over time under different diets. Use loop functions to answer:
+
+1. What is the average weight of chicks on each `Diet`? (Use `tapply()`.)
+2. Split the dataset by `Diet` into a list of four data frames. (Use `split()`.)
+3. For each diet's data frame, compute the **maximum weight** observed. (Use `lapply()` on the result of step 2 with an anonymous function that extracts and maxes the `weight` column.)
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 5: Combining `mapply()` with real data
+
+You're given two vectors — thresholds and column names:
+
+```r
+thresholds <- c(20, 100, 3)
+columns <- c("mpg", "hp", "wt")
+```
+
+For each pair (threshold, column), compute the **number of cars in `mtcars`** where that column's value exceeds the threshold. Use `mapply()` and an anonymous function.
+
+The result should be a named vector with three numbers: how many cars have `mpg > 20`, how many have `hp > 100`, and how many have `wt > 3`.
+
+```{r}
+# Your code here
+
+```
