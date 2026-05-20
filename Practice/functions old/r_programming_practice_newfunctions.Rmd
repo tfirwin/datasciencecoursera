@@ -1,0 +1,434 @@
+---
+title: "R Programming Practice (Part 5): Functions"
+author: "Tim Irwin"
+date: "2026-04-27"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Practice (Part 5): Functions
+
+This practice set covers functions from *R Programming for Data Science* by Roger D. Peng (pages 56–64):
+
+1. Basic function syntax
+2. Default arguments and argument matching
+3. Functions that operate on vectors
+4. Functions with control flow (combining if/else and loops from the last practice set)
+5. Functions that operate on data frames
+6. Advanced topics: lazy evaluation, `NULL` defaults, the `...` argument
+
+The exercises **build on each other** — each one extends or combines a previous one. Often you'll start with a small function and then add features (defaults, NA handling, vectorization) one at a time. If you get stuck on a later exercise, revisit how you solved earlier ones in the same section.
+
+Write your answers inside the R chunks below.
+
+You may want to start with:
+
+```{r}
+rm(list = ls())
+```
+
+> **Tip:** Build functions incrementally. Get the simplest version working first, then add features one at a time. If a function isn't working, test the body of it line by line in the console with concrete values before wrapping it back up.
+
+## Datasets used in this practice
+
+- `airquality` — Daily air quality measurements in New York, May–September 1973.
+- `mtcars` — Fuel consumption and 10 aspects of design/performance for 32 cars.
+- `iris` — Measurements of 150 iris flowers across 3 species.
+
+---
+
+# 1. Basic Functions
+
+> **Note:** A function is created with `function(args) { body }` and assigned to a name with `<-`. The function returns the value of the **last expression** in its body — you usually don't need an explicit `return()`.
+
+### Exercise 1.1
+
+Write a function called `say_hello` that takes no arguments and prints `"Hello, world!"`. Call it to test.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.2
+
+Modify `say_hello` to take a `name` argument and print `"Hello, <name>!"` (substituting in the actual name). Test it with your own name. Hint: `paste()` or `paste0()` will combine strings.
+
+```{r}
+# Your code here
+
+```
+
+> **Note:** There's a difference between *printing* a value and *returning* it. `print()` shows it on the screen; *returning* makes it available to the calling code (so it can be assigned to a variable, used in another function, etc.). For a function to be useful in a pipeline, it usually needs to return a value, not just print one.
+
+### Exercise 1.3
+
+Modify your function from Exercise 1.2 again so that instead of printing the greeting, it **returns** it as a string. Store the result in a variable called `msg` and then print `msg`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.4
+
+Write a new function called `double_it` that takes a number `x` and returns `x` multiplied by 2. Test it with `double_it(5)` and `double_it(-3)`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.5
+
+Generalize Exercise 1.4: write `multiply_by(x, factor)` that takes two numbers and returns their product. Test it with `multiply_by(5, 3)`.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 2. Default Arguments and Argument Matching
+
+> **Note:** Default values are set in the function definition with `=`. Once you have defaults, callers can omit those arguments entirely.
+
+### Exercise 2.1
+
+Take your `multiply_by` function from Exercise 1.5 and add a default value of `2` for `factor`. Now `multiply_by(5)` should return 10, but `multiply_by(5, 3)` should still return 15.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.2
+
+Call `multiply_by` from Exercise 2.1 four different ways and verify they all give the same answer:
+
+1. Positional: `multiply_by(5, 3)`
+2. Named: `multiply_by(x = 5, factor = 3)`
+3. Named, reverse order: `multiply_by(factor = 3, x = 5)`
+4. Mixed: `multiply_by(5, factor = 3)`
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 2.3
+
+Write a function called `greet` that takes a `name` argument (no default) and a `greeting` argument that defaults to `"Hello"`. It should return a string like `"Hello, Tim!"` or `"Howdy, Tim!"`. Test it both ways — once using the default greeting, once overriding it.
+
+```{r}
+# Your code here
+
+```
+
+> **Note:** Required arguments (no default) should generally come before optional arguments (with defaults) in the function definition. This matches R's convention and makes positional calls more predictable.
+
+### Exercise 2.4
+
+Write a function called `discount_price(price, discount_pct = 10)` that returns the price after applying a percentage discount. So `discount_price(100)` should return 90, and `discount_price(100, 25)` should return 75.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 3. Functions That Operate on Vectors
+
+> **Note:** Most useful R functions take vectors, not single values. When you write `mean(x)`, `x` is a whole vector. Your custom functions should usually be designed the same way.
+
+### Exercise 3.1
+
+Write a function called `vec_sum(x)` that takes a numeric vector and returns the sum of its elements. **Don't use `sum()`** — write it with a `for` loop, using the pattern from your control structures practice. Test it with `c(1, 2, 3, 4, 5)` (should return 15).
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.2
+
+Modify `vec_sum` from Exercise 3.1 to handle NAs. Add an argument `na.rm` that defaults to `FALSE`. If `TRUE`, skip NA values inside the loop using `next` (or an `if` check). Test it with `c(1, 2, NA, 4, 5)` both ways.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.3
+
+Test your `vec_sum` from Exercise 3.2 on `airquality$Ozone` with `na.rm = TRUE`. Compare your result to `sum(airquality$Ozone, na.rm = TRUE)` — they should match.
+
+```{r}
+# Your code here
+
+```
+
+> **Note:** Returning multiple values is done by wrapping them in a **named list**. The names act as labels so the caller can extract specific values with `result$mean`, `result$median`, etc.
+
+### Exercise 3.4
+
+Write a function called `vec_summary(x)` that takes a numeric vector and returns a named list with five elements: `mean`, `median`, `min`, `max`, and `n_missing` (the count of NAs). Make sure the mean/median/min/max calculations exclude NAs.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.5
+
+Apply `vec_summary` from Exercise 3.4 to two different columns: `airquality$Wind` and `airquality$Ozone`. Then extract just the `mean` from each result using `$`.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 4. Functions with Control Flow
+
+This section combines functions with if/else and loops from the previous practice set.
+
+### Exercise 4.1
+
+Write a function called `classify(x)` that takes a single number and returns:
+
+- `"positive"` if x > 0
+- `"negative"` if x < 0
+- `"zero"` if x == 0
+
+Test it with several values.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 4.2
+
+Modify `classify` from Exercise 4.1 to also handle `NA`. If `x` is missing, return `"missing"`. Remember: check `is.na()` *first*, before the comparisons.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 4.3
+
+The version of `classify` you just wrote works on a single number. Now write `classify_all(x)` that takes a **vector** of numbers and returns a **vector** of classifications. Use a `for` loop internally — and feel free to call `classify` from inside the loop.
+
+Test it with `c(5, -3, 0, NA, 10)` — you should get back `c("positive", "negative", "zero", "missing", "positive")`.
+
+```{r}
+# Your code here
+
+```
+
+> **Note:** Calling one of your own functions from inside another is encouraged — it keeps each function small and focused. This is the foundation of writing maintainable code.
+
+### Exercise 4.4
+
+Apply `classify_all` from Exercise 4.3 to the column `airquality$Temp - 75` (which gives you each day's temperature relative to 75°F). Use `table()` on the result to see how many days were above, at, or below 75.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 4.5
+
+Write a function called `categorize_mpg(x)` that takes a numeric vector of mpg values and returns a character vector classifying each:
+
+- `"efficient"` if mpg > 25
+- `"average"` if 15 ≤ mpg ≤ 25
+- `"thirsty"` if mpg < 15
+
+Apply it to `mtcars$mpg` and use `table()` to see the counts.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 5. Functions That Operate on Data Frames
+
+> **Note:** When you want to refer to a column by a name stored in a variable, use `df[[colname]]`, not `df$colname`. The `$` operator only works with literal names — it doesn't look up the value of a variable. (You ran into this in the subsetting practice.)
+
+### Exercise 5.1
+
+Write a function called `column_mean(df, col)` where `df` is a data frame and `col` is a column name as a character string. The function should return the mean of that column with NAs removed. Test it on `mtcars` with `"mpg"`, and on `airquality` with `"Ozone"`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 5.2
+
+Generalize Exercise 5.1 into `column_summary(df, col)` that uses your `vec_summary` function from Exercise 3.4 internally — pull the column out of the data frame, then pass it to `vec_summary`. Test it on `mtcars` with `"hp"`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 5.3
+
+Write a function called `above_average(df, col)` that returns the subset of rows where the value in column `col` is above the mean of that column (NAs removed). Test it on `mtcars` with `"mpg"` — you should get back the more fuel-efficient cars.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 5.4
+
+Extend Exercise 5.3 into `above_threshold(df, col, threshold)` — instead of using the column's mean, use a user-provided threshold. Then make `threshold` default to the column's mean if not provided. Hint: you can use `NULL` as a placeholder default and check `is.null()` inside the function.
+
+Test it both ways: with an explicit threshold and with the default.
+
+```{r}
+# Your code here
+
+```
+
+> **Note:** Setting a default to `NULL` and checking `is.null()` inside the function is a common pattern when the "real" default depends on the input data and can't be computed up front.
+
+---
+
+# 6. Advanced Topics
+
+### Exercise 6.1: Lazy evaluation
+
+R only evaluates function arguments when they're actually used. Write a function `lazy_demo(a, b)` that prints `a` but never references `b`. Then call it with just one argument: `lazy_demo(5)`. It should work without error, even though you didn't supply `b`.
+
+```{r}
+# Your code here
+
+```
+
+> **Note:** Lazy evaluation is a quirk of R — useful occasionally, but it can also hide bugs (you might forget to use an argument and never notice). Don't rely on it in production code.
+
+### Exercise 6.2: The `...` argument
+
+The `...` argument lets a function accept additional arguments and pass them on to other functions. Write `my_mean(x, ...)` that calls `mean(x, ...)` internally. This means callers can pass `na.rm = TRUE` or `trim = 0.1` through your function to `mean()` without you having to declare those arguments yourself.
+
+Test it with `my_mean(airquality$Ozone, na.rm = TRUE)`.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 6.3
+
+Write a function `describe_column(df, col, ...)` that prints the column name and then calls `summary(df[[col]], ...)`. The `...` allows callers to pass additional arguments to `summary()`. Test it on `mtcars` with `"mpg"`.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# Mini Challenges
+
+These tie everything together. Each one combines multiple concepts from above.
+
+## Challenge 1: BMI calculator with units
+
+Write `bmi_calc(weight, height, units = "imperial")` that calculates BMI:
+
+- If `units = "imperial"`: weight in pounds, height in inches. Formula: `(weight / height^2) * 703`
+- If `units = "metric"`: weight in kg, height in meters. Formula: `weight / height^2`
+
+The function should return a **named list** with two elements: `bmi` (the numeric value) and `category` (one of `"underweight"`, `"normal"`, `"overweight"`, `"obese"` based on standard cutoffs: <18.5, 18.5–25, 25–30, ≥30).
+
+If `units` is anything other than `"imperial"` or `"metric"`, return an error using `stop("Invalid units")`.
+
+Test it with both unit systems.
+
+```{r}
+# Your code here
+
+```
+
+> **Note:** `stop("message")` halts execution and reports an error. It's how you signal that something is wrong with the inputs.
+
+## Challenge 2: Apply to multiple columns
+
+Using your `vec_summary` function from Exercise 3.4, write a loop that applies it to **every numeric column** of `mtcars` and stores the results in a named list called `all_summaries`. Then access `all_summaries$mpg$mean` to verify it worked.
+
+Hint: `sapply(df, is.numeric)` tells you which columns are numeric, but you can also just loop over all columns of `mtcars` since they all happen to be numeric.
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 3: Smart summary
+
+Write a function called `smart_summary(x)` that:
+
+- If `x` is numeric, returns `vec_summary(x)` (your function from Exercise 3.4)
+- If `x` is character or factor, returns a `table()` of the values
+- If `x` is logical, returns the count of `TRUE` and `FALSE` values
+
+Use `if/else if` and `is.numeric()`, `is.character()`, `is.factor()`, `is.logical()`.
+
+Test it on `iris$Sepal.Length` (numeric), `iris$Species` (factor), and a logical vector you make yourself.
+
+```{r}
+# Your code here
+
+```
+
+## Challenge 4: Refactor
+
+Here's some working code that's repetitive:
+
+```r
+ozone_above_50 <- airquality$Ozone[!is.na(airquality$Ozone) & airquality$Ozone > 50]
+ozone_above_50_count <- length(ozone_above_50)
+ozone_above_50_mean <- mean(ozone_above_50)
+
+wind_above_15 <- airquality$Wind[!is.na(airquality$Wind) & airquality$Wind > 15]
+wind_above_15_count <- length(wind_above_15)
+wind_above_15_mean <- mean(wind_above_15)
+```
+
+Refactor it into a single function `above_threshold_stats(x, threshold)` that takes a vector and threshold and returns a named list with `count` and `mean` of values above the threshold. Then use it to reproduce the same results in just two function calls.
+
+```{r}
+# Your code here
+
+```
+
+> **Note:** Refactoring repetitive code into functions is one of the highest-value skills in programming. Any time you find yourself copying and pasting code with small changes, that's a sign a function should be created.
+
+## Challenge 5: A complete pipeline
+
+Combine everything. Write a function called `analyze_column(df, col, threshold = NULL)` that:
+
+1. Pulls the column from the data frame.
+2. Counts how many NAs are in it.
+3. If `threshold` is `NULL`, sets it to the column's mean (NAs removed).
+4. Counts how many values are above the threshold.
+5. Returns a named list with: `column_name`, `n_missing`, `threshold_used`, `n_above_threshold`, and `pct_above_threshold` (as a percentage of non-missing values).
+
+Test it on `airquality` with `"Ozone"` (let it use the default threshold) and on `mtcars` with `"hp"` and `threshold = 200`.
+
+```{r}
+# Your code here
+
+```

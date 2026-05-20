@@ -1,0 +1,251 @@
+---
+title: "R Programming Drill: Logical Masks vs. Values"
+author: "Tim Irwin"
+date: "2026-05-20"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Drill: Logical Masks vs. Values
+
+This is a focused drill — not a broad practice set. Every exercise targets one of two specific habits:
+
+1. **Logical mask vs. vector of values** — knowing when you have a TRUE/FALSE mask versus actual data, and what each is good for.
+2. **Store-as-you-go** — capturing intermediate results in variables instead of letting expressions evaporate.
+
+The exercises are short and deliberately repetitive. That repetition is the point — you're building a reflex, not learning new material. Do them in order; they escalate slightly.
+
+```{r}
+rm(list = ls())
+```
+
+## The one idea behind all of this
+
+A **logical mask** is a vector of TRUE/FALSE — answers to a yes/no question about each element. It is NOT data. It has exactly two jobs:
+
+- **Count the TRUEs:** `sum(mask)` tells you *how many* passed.
+- **Extract the matching values:** `x[mask]` gives you the actual *values* that passed.
+
+The trap is doing arithmetic directly on a mask — `mean(mask)`, `mask > 5`, `max(mask)`. That almost always means you forgot to subset first. The reflex to build:
+
+> "Is this TRUE/FALSE or is it numbers? If TRUE/FALSE → either `sum()` it to count, or use `x[...]` to extract. Don't compute on it directly."
+
+---
+
+# Part A: Predict the output (no computer)
+
+For each of these, **write down what you think R returns BEFORE running it.** Then run it and check. The point is to test your mental model, so don't skip the prediction step.
+
+### Drill A.1
+
+```{r}
+x <- c(10, 20, 30, 40, 50)
+mask <- x > 25
+
+# Predict each of these before running:
+# (a) What is `mask`?
+# (b) What does sum(mask) give?
+# (c) What does x[mask] give?
+# (d) What does mean(mask) give? (think carefully)
+# (e) What does mean(x[mask]) give?
+
+```
+
+> Write your five predictions as comments, THEN uncomment and run to check. Pay special attention to (d) vs (e) — they are very different, and the difference is the whole lesson.
+
+### Drill A.2
+
+```{r}
+ages <- c(15, 22, 8, 67, 45, 30, 71)
+adult <- ages >= 18
+
+# Predict before running:
+# (a) sum(adult)         -- ?
+# (b) ages[adult]        -- ?
+# (c) ages[!adult]       -- ?
+# (d) sum(adult) / length(ages)   -- ? (what does this represent?)
+
+```
+
+### Drill A.3
+
+```{r}
+v <- c(4, NA, 9, NA, 2, 7)
+missing <- is.na(v)
+
+# Predict before running:
+# (a) missing            -- ?
+# (b) sum(missing)       -- ?
+# (c) v[missing]         -- ? (what's the value at a missing position?)
+# (d) v[!missing]        -- ?
+# (e) sum(!missing)      -- ? (what does this count?)
+
+```
+
+---
+
+# Part B: Fix the bug
+
+Each of these snippets has a mask-vs-values bug (the same kind from your challenges). The intended result is described in the comment. Find the bug and fix it.
+
+### Drill B.1
+
+```{r}
+scores <- c(82, 91, 67, 45, 78, 95, 58)
+
+# GOAL: the average of all passing scores (>= 60)
+# BUGGY VERSION:
+passing <- scores >= 60
+# avg_passing <- mean(passing)   # <-- this is wrong. why?
+
+# Write the corrected line:
+
+```
+
+### Drill B.2
+
+```{r}
+temps <- c(68, 72, NA, 81, 90, NA, 75)
+
+# GOAL: how many non-missing temperature readings are there?
+# BUGGY VERSION:
+# count <- sum(temps)            # <-- wrong (two problems here, actually)
+
+# Write the corrected line:
+
+```
+
+### Drill B.3
+
+```{r}
+prices <- c(12.50, 8.00, 25.00, 5.50, 18.00)
+
+# GOAL: the highest price that is under $20
+# BUGGY VERSION:
+under_20 <- prices < 20
+# highest <- max(under_20)       # <-- wrong. why?
+
+# Write the corrected line:
+
+```
+
+### Drill B.4
+
+```{r}
+mpg <- mtcars$mpg
+
+# GOAL: the proportion of cars with mpg above 20 (a number between 0 and 1)
+# BUGGY VERSION:
+# prop <- mean(mpg > 20)         # <-- actually, is this wrong? think about it.
+
+# Decide whether this is correct. If it is, explain why in a comment.
+# If not, fix it.
+
+```
+
+> Drill B.4 is a trick question. `mean()` of a logical mask gives the *proportion of TRUEs*, because TRUE counts as 1 and FALSE as 0. So `mean(mpg > 20)` is actually a correct and idiomatic way to get a proportion. The lesson: computing on a mask isn't *always* wrong — but you have to know exactly what it means. `mean(mask)` = proportion; `sum(mask)` = count; `x[mask]` = values. Make sure that whenever you compute on a mask, you did it on purpose.
+
+---
+
+# Part C: Store-as-you-go
+
+These drills target the habit of capturing intermediate values. Each function below is missing the storage step or computes the wrong thing because something wasn't saved.
+
+### Drill C.1
+
+```{r}
+# GOAL: a function that returns the number of non-missing values in a column.
+# BUGGY VERSION:
+# count_present <- function(df, col) {
+#   df[[col]]                       # this line does nothing
+#   sum(!is.na(df[[col]]))
+# }
+
+# Rewrite it cleanly: store the column once as `x`, then work with `x`.
+count_present <- function(df, col) {
+  # Your code here
+
+}
+
+# Test:
+# count_present(airquality, "Ozone")   # should be 116
+
+```
+
+### Drill C.2
+
+```{r}
+# GOAL: a function that returns the mean of the values that are above the
+# column's own median. (e.g., "average of the above-median cars' mpg")
+# Build it step by step, storing each piece:
+
+above_median_mean <- function(df, col) {
+  # Step 1: store the column as x
+  # Step 2: compute and store the median (NAs removed)
+  # Step 3: build a mask: which values are above the median AND not NA?
+  # Step 4: use the mask to extract values, then take their mean
+  # Your code here
+
+}
+
+# Test:
+# above_median_mean(mtcars, "mpg")
+
+```
+
+### Drill C.3
+
+```{r}
+# GOAL: a function that takes a numeric vector and returns a named list with:
+#   n_total    -- total number of elements
+#   n_missing  -- number of NAs
+#   n_present  -- number of non-NAs
+#   mean_present -- mean of the non-NA values
+# Store each intermediate result in its own variable before building the list.
+
+describe <- function(x) {
+  # Your code here
+
+}
+
+# Test:
+# describe(c(5, NA, 8, 12, NA, 3))
+# Expected: n_total = 6, n_missing = 2, n_present = 4, mean_present = 7
+
+```
+
+---
+
+# Part D: Putting it together
+
+One slightly bigger function that exercises both habits at once. Take your time and store every intermediate step.
+
+### Drill D.1
+
+```{r}
+# GOAL: clean_above(df, col, cutoff)
+# Returns a named list describing values in `col` that are above `cutoff`,
+# after removing NAs:
+#   n_dropped_na    -- how many NAs were removed
+#   n_kept          -- how many non-NA values remain
+#   n_above_cutoff  -- how many of the kept values are above cutoff
+#   values_above    -- the actual vector of values above cutoff
+#   mean_above      -- the mean of those above-cutoff values
+#
+# Build it with explicit, well-named intermediate variables.
+# Remember: is.na() check first; mask to extract values, not to compute on.
+
+clean_above <- function(df, col, cutoff) {
+  # Your code here
+
+}
+
+# Test:
+# result <- clean_above(airquality, "Ozone", 50)
+# result$n_above_cutoff   # how many ozone readings above 50
+# result$mean_above       # their average
+
+```
+
+> **Self-check before you call it done:** Walk through your function and for every variable ask: "Is this a mask (TRUE/FALSE) or values (numbers)?" Then confirm you only ever `sum()` masks or use them to subset — never `mean()` or `>` them by accident.
