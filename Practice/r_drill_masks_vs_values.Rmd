@@ -22,14 +22,27 @@ rm(list = ls())
 
 ## The one idea behind all of this
 
-A **logical mask** is a vector of TRUE/FALSE — answers to a yes/no question about each element. It is NOT data. It has exactly two jobs:
+**Comparison operators** (`>`, `<`, `>=`, `<=`, `==`, `!=`) turn values into TRUE/FALSE.
+They answer a yes/no question about each element. The result is called a **logical mask**.
 
+**Logical operators** (`&`, `|`, `!`) combine or negate TRUE/FALSE values that already exist.
+- `&` means "and" — both must be TRUE
+- `|` means "or" — at least one must be TRUE
+- `!` means "not" — flips TRUE to FALSE and vice versa
+
+A **logical mask** is NOT data. It has exactly two jobs:
 - **Count the TRUEs:** `sum(mask)` tells you *how many* passed.
 - **Extract the matching values:** `x[mask]` gives you the actual *values* that passed.
 
-The trap is doing arithmetic directly on a mask — `mean(mask)`, `mask > 5`, `max(mask)`. That almost always means you forgot to subset first. The reflex to build:
+The trap is doing arithmetic directly on a mask — `mean(mask)`, `mask > 5`, `max(mask)`.
+That almost always means you forgot to subset first.
 
-> "Is this TRUE/FALSE or is it numbers? If TRUE/FALSE → either `sum()` it to count, or use `x[...]` to extract. Don't compute on it directly."
+The one exception: `mean(mask)` gives you the *proportion* of TRUEs (e.g. 0.6 = 60% passed).
+This is useful when you actually want a percentage, but make sure that's what you intended.
+
+The reflex to build:
+> "Is this TRUE/FALSE or is it numbers? If TRUE/FALSE → either `sum()` it to count,
+> or use `x[...]` to extract. Don't compute on it directly."
 
 ---
 
