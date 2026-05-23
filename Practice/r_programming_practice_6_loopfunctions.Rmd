@@ -79,7 +79,12 @@ Notice three things:
 Create a list containing three numeric vectors of different lengths (any data you like). Use `lapply()` to find the maximum value in each vector.
 
 ```{r}
-# Your code here
+calories <- list(
+  mon = c(200, 95, 725, 640, 95, 20),
+  tues = c(200, 95, 480, 520, 315),
+  wed = c(200, 95, 900, 720)
+)
+lapply(calories, max)
 
 ```
 
@@ -110,7 +115,12 @@ Any named arguments you supply after the function get forwarded to the function 
 The `airquality` dataset has missing values in `Ozone` and `Solar.R`. Build a list containing these two columns, then use `lapply()` with `mean` and `na.rm = TRUE` to get the mean of each, ignoring NAs.
 
 ```{r}
-# Your code here
+airquality_mean <- list(
+  Ozone = airquality$Ozone,
+  Solar.R = airquality$Solar.R
+)
+
+lapply(airquality_mean, mean, na.rm = T)
 
 ```
 
@@ -140,7 +150,7 @@ The `function(s) max(s) - min(s)` part is a function with no name — it exists 
 Use `lapply()` with an anonymous function to compute the **range** (max minus min) of each numeric column of `mtcars`. Hint: a data frame *is* a list of columns, so you can pass `mtcars` directly to `lapply()`.
 
 ```{r}
-# Your code here
+lapply(mtcars, function(s) max(s) - min(s))
 
 ```
 
@@ -163,8 +173,13 @@ Here `sample()` gets called three times — once with `size = 2`, once with `siz
 Use `lapply()` to extract the first 3 rows of `mtcars`, `iris`, and `airquality` (a list of three data frames). Hint: if you put the three data frames into a list, you can apply `head()` with `n = 3` to each.
 
 ```{r}
-# Your code here
+data <- list(
+  mtcars,
+  iris,
+  airquality
+)
 
+lapply(data, head, n = 3)
 ```
 
 ---
@@ -210,7 +225,8 @@ The result is a list of three numeric vectors — one per species.
 Use `split()` to divide the `mtcars` dataset into groups based on the number of cylinders (`cyl`). The result should be a list with three elements (4-cylinder, 6-cylinder, and 8-cylinder cars). Confirm the structure with `names()` on the result.
 
 ```{r}
-# Your code here
+cyl_mtcars <-split(mtcars, mtcars$cyl)
+names(cyl_mtcars)
 
 ```
 
@@ -243,8 +259,7 @@ Read this from the inside out: first split the vector by species, then apply `me
 Using your split from Exercise 2.1, use `lapply()` to compute the **average horsepower (`hp`)** for cars in each cylinder group. Hint: each element of your split is a full data frame, so your function will need to extract the `hp` column from it.
 
 ```{r}
-# Your code here
-
+lapply(split(mtcars$hp, mtcars$cyl), mean)
 ```
 
 ---
@@ -279,7 +294,7 @@ Notice the output difference: `tapply()` simplifies the result to a named numeri
 Using `tapply()`, compute the average `mpg` for each cylinder group in `mtcars`. The result should be a named vector showing average mpg for 4-, 6-, and 8-cylinder cars.
 
 ```{r}
-# Your code here
+tapply(mtcars$mpg, mtcars$cyl, mean)
 
 ```
 
@@ -288,7 +303,7 @@ Using `tapply()`, compute the average `mpg` for each cylinder group in `mtcars`.
 Using `tapply()` on the `airquality` dataset, compute the average `Temp` for each `Month`. Make sure to handle NAs by passing `na.rm = TRUE`.
 
 ```{r}
-# Your code here
+tapply(airquality$Temp, airquality$Month, mean, na.rm = T)
 
 ```
 
@@ -310,7 +325,7 @@ Each list element is a length-2 vector containing the min and max for that speci
 Using `tapply()` on `ChickWeight`, get the **range** of weights for each diet (the `Diet` column). The result will be a list since `range()` returns two values per group.
 
 ```{r}
-# Your code here
+tapply(ChickWeight$weight, ChickWeight$Diet, range)
 
 ```
 
@@ -355,7 +370,7 @@ apply(state.x77[1:5, ], 1, mean)
 Use `apply()` on `state.x77` to find the **maximum value** in each column. The result should be a named numeric vector showing the highest population, highest income, etc.
 
 ```{r}
-# Your code here
+apply(state.x77, 2, max)
 
 ```
 
@@ -364,7 +379,9 @@ Use `apply()` on `state.x77` to find the **maximum value** in each column. The r
 Convert the first 5 rows of `mtcars` to a matrix using `as.matrix()`, then use `apply()` to compute the **standard deviation** of each column. (The SD function is `sd()`.)
 
 ```{r}
-# Your code here
+car_matrix <- as.matrix(head(mtcars, n = 5))
+
+apply(car_matrix, 2, sd)
 
 ```
 
@@ -386,7 +403,7 @@ Here `probs = c(0.25, 0.75)` gets passed to `quantile()` each time it's called. 
 Using `apply()` on `state.x77`, get the **5th and 95th percentile** of each column. Hint: it's the same pattern as the lesson example, just different `probs` values.
 
 ```{r}
-# Your code here
+apply(state.x77, 2, quantile, probs = c(0.05, 0.95))
 
 ```
 
@@ -408,7 +425,7 @@ This shows you how spread out each variable is — Population has a much larger 
 Using `apply()` with an anonymous function, compute the **range** (max minus min) of each column of `state.x77`.
 
 ```{r}
-# Your code here
+apply(state.x77, 2, function(col) max(col) - min(col))
 
 ```
 
@@ -459,7 +476,14 @@ new_prices <- c(55, 70, 110, 195)
 The result should be a vector of percent changes for each pair.
 
 ```{r}
-# Your code here
+old_prices <- c(50, 75, 100, 200)
+new_prices <- c(55, 70, 110, 195)
+
+pct_change <- function(old, new) {
+  ((new - old) / old *100)
+}
+
+mapply(pct_change, old_prices, new_prices)
 
 ```
 
@@ -493,7 +517,13 @@ mapply(my_round, values, MoreArgs = list(digits = 2))
 Write a function `weighted_score(score, weight)` that returns `score * weight`. Use `mapply()` to apply it to a vector of scores `c(85, 92, 78, 88)` paired with weights `c(0.2, 0.3, 0.2, 0.3)`.
 
 ```{r}
-# Your code here
+weighted_score <- function(score, weight) {
+  score * weight
+}
+scores <- c(85, 92, 78, 88)
+weights <- c(0.2, 0.3, 0.2, 0.3)
+
+mapply(weighted_score, scores, weights)
 
 ```
 
@@ -530,7 +560,17 @@ This works because `mapply()` calls `classify()` separately on each value.
 Write a function `temp_label(temp)` that returns `"hot"` if `temp > 80`, `"cold"` if `temp < 60`, and `"mild"` otherwise. Use `mapply()` to apply it to `airquality$Temp` (just the first 10 values is fine).
 
 ```{r}
-# Your code here
+temp_label <- function(temp) {
+  if (temp > 80) {
+    "hot"
+  } else if (temp < 60) {
+    "cold"
+  } else {
+    "mild"
+  }
+}
+
+mapply(temp_label, head(airquality$Temp, n = 10)) 
 
 ```
 
@@ -552,7 +592,34 @@ Confirm all three approaches give the same numeric values.
 
 ```{r}
 # Your code here
+lapply(split(iris$Petal.Length, iris$Species), mean)
 
+tapply(iris$Petal.Length, iris$Species, mean)
+
+results <- list()
+for (sp in unique(iris$Species)) {
+  results[[sp]] <- mean(iris$Petal.Length[iris$Species == sp])
+}
+results
+
+#### i got 1 and 2 right, but initially i did:
+# avg_petal <- function(df, col) {
+#   for df
+# }
+# 
+#  then:
+# avg_petal <- 
+#   for (unique(iris$species)) {
+#     results <- 
+#   }
+# }
+# 
+#  then:
+# results <- list()
+# for (sp in unique(iris$Species)) {
+#   results[[sp]] <- mean(iris$Petal.Length)
+# }
+# results
 ```
 
 ---
@@ -564,7 +631,12 @@ Using the `airquality` dataset, compute a **multi-statistic summary** (mean, med
 The result will be a list (since the function returns multiple values per group).
 
 ```{r}
-# Your code here
+# what its looking for
+tapply(airquality$Wind, airquality$Month, function(x) {
+  c(mean = mean(x), median = median(x), max = max(x))
+})
+# this was my inital answer
+#tapply(airquality$Wind, airquality$Month, summary)
 
 ```
 
@@ -577,8 +649,13 @@ Use `apply()` (or `lapply()` — your choice, but think about which output struc
 Hint: write a small helper function that takes a vector and returns the three stats as a named vector, then apply it across columns.
 
 ```{r}
-# Your code here
+stats <- function(x) {
+  c(min = min(x), mean = mean(x), max = max(x))
+}
 
+lapply(mtcars, stats)
+apply(mtcars, 2, stats)
+# got both of these right
 ```
 
 ---
@@ -592,8 +669,11 @@ The `ChickWeight` dataset records chick weights over time under different diets.
 3. For each diet's data frame, compute the **maximum weight** observed. (Use `lapply()` on the result of step 2 with an anonymous function that extracts and maxes the `weight` column.)
 
 ```{r}
-# Your code here
-
+tapply(ChickWeight$weight, ChickWeight$Diet, mean) # got right
+diet <- split(ChickWeight, ChickWeight$Diet) # got right
+# 3 got wrong:
+# lapply(diet, function mean(ChickWeight$weight))
+lapply(diet, function(x) max(x$weight))
 ```
 
 ---
@@ -612,6 +692,17 @@ For each pair (threshold, column), compute the **number of cars in `mtcars`** wh
 The result should be a named vector with three numbers: how many cars have `mpg > 20`, how many have `hp > 100`, and how many have `wt > 3`.
 
 ```{r}
-# Your code here
+thresholds <- c(20, 100, 3)
+columns <- c("mpg", "hp", "wt")
+
+mapply(function(col, thresh) sum(mtcars[[col]] > thresh), columns, thresholds) # got wrong
+
+# started with:
+# car_numbers <- function(threshold, column) {
+#   if (thresh)
+# }
+# 
+# then
+# mapply(sum(x > threshold), mtcars[[col]])
 
 ```
