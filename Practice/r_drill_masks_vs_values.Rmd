@@ -57,12 +57,16 @@ x <- c(10, 20, 30, 40, 50)
 mask <- x > 25
 
 # Predict each of these before running:
-# (a) What is `mask`?
-# (b) What does sum(mask) give?
-# (c) What does x[mask] give?
-# (d) What does mean(mask) give? (think carefully)
-# (e) What does mean(x[mask]) give?
-
+# (a) What is `mask`? an vector with TRUEs and FALSEs
+mask
+# (b) What does sum(mask) give? tells you how many passed - 3
+sum(mask)
+# (c) What does x[mask] give? gives you the data that passed - 30, 40, and 50
+x[mask]
+# (d) What does mean(mask) give? (think carefully) the proportion that passed 0.6
+mean(mask)
+# (e) What does mean(x[mask]) give? the mean of the numbers that passed - 40
+mean(x[mask])
 ```
 
 > Write your five predictions as comments, THEN uncomment and run to check. Pay special attention to (d) vs (e) — they are very different, and the difference is the whole lesson.
@@ -74,11 +78,11 @@ ages <- c(15, 22, 8, 67, 45, 30, 71)
 adult <- ages >= 18
 
 # Predict before running:
-# (a) sum(adult)         -- ?
-# (b) ages[adult]        -- ?
-# (c) ages[!adult]       -- ?
-# (d) sum(adult) / length(ages)   -- ? (what does this represent?)
-
+# (a) sum(adult)         -- ? 5
+# (b) ages[adult]        -- ? 22, 67, 45, 30, 71
+# (c) ages[!adult]       -- ? 15, 8 
+# (d) sum(adult) / length(ages)   -- ? (what does this represent?) the proportion that are adults
+sum(adult) / length(ages)
 ```
 
 ### Drill A.3
@@ -88,11 +92,11 @@ v <- c(4, NA, 9, NA, 2, 7)
 missing <- is.na(v)
 
 # Predict before running:
-# (a) missing            -- ?
-# (b) sum(missing)       -- ?
-# (c) v[missing]         -- ? (what's the value at a missing position?)
-# (d) v[!missing]        -- ?
-# (e) sum(!missing)      -- ? (what does this count?)
+# (a) missing            -- ? FALSE, TRUE, FALSE, TRUE, FALSE, FALSE
+# (b) sum(missing)       -- ? 2
+# (c) v[missing]         -- ? (what's the value at a missing position?) NA, NA
+# (d) v[!missing]        -- ? 4, 9, 2, 7
+# (e) sum(!missing)      -- ? (what does this count?) the number of non NA numbers - 4
 
 ```
 
@@ -111,9 +115,10 @@ scores <- c(82, 91, 67, 45, 78, 95, 58)
 # BUGGY VERSION:
 passing <- scores >= 60
 # avg_passing <- mean(passing)   # <-- this is wrong. why?
-
+# it gives you the proportion that passed
 # Write the corrected line:
-
+avg_passing <- mean(scores[passing])
+avg_passing
 ```
 
 ### Drill B.2
@@ -124,9 +129,9 @@ temps <- c(68, 72, NA, 81, 90, NA, 75)
 # GOAL: how many non-missing temperature readings are there?
 # BUGGY VERSION:
 # count <- sum(temps)            # <-- wrong (two problems here, actually)
-
+# tries to add up the actual temperatures, but there is NA values within
 # Write the corrected line:
-
+count <- sum(!is.na(temps))
 ```
 
 ### Drill B.3
@@ -138,9 +143,9 @@ prices <- c(12.50, 8.00, 25.00, 5.50, 18.00)
 # BUGGY VERSION:
 under_20 <- prices < 20
 # highest <- max(under_20)       # <-- wrong. why?
-
+# under_20 is a logical vector so there is no max
 # Write the corrected line:
-
+max(prices[under_20])
 ```
 
 ### Drill B.4
@@ -151,10 +156,10 @@ mpg <- mtcars$mpg
 # GOAL: the proportion of cars with mpg above 20 (a number between 0 and 1)
 # BUGGY VERSION:
 # prop <- mean(mpg > 20)         # <-- actually, is this wrong? think about it.
-
+# gives the proportion of T/F under the logic of mpg > 20
 # Decide whether this is correct. If it is, explain why in a comment.
 # If not, fix it.
-
+# i think that this is correct
 ```
 
 > Drill B.4 is a trick question. `mean()` of a logical mask gives the *proportion of TRUEs*, because TRUE counts as 1 and FALSE as 0. So `mean(mpg > 20)` is actually a correct and idiomatic way to get a proportion. The lesson: computing on a mask isn't *always* wrong — but you have to know exactly what it means. `mean(mask)` = proportion; `sum(mask)` = count; `x[mask]` = values. Make sure that whenever you compute on a mask, you did it on purpose.
@@ -177,12 +182,12 @@ These drills target the habit of capturing intermediate values. Each function be
 
 # Rewrite it cleanly: store the column once as `x`, then work with `x`.
 count_present <- function(df, col) {
-  # Your code here
-
+  x <- df[[col]]
+  sum(!is.na(x)) 
 }
 
 # Test:
-# count_present(airquality, "Ozone")   # should be 116
+count_present(airquality, "Ozone")   # should be 116
 
 ```
 
@@ -194,17 +199,15 @@ count_present <- function(df, col) {
 # Build it step by step, storing each piece:
 
 above_median_mean <- function(df, col) {
-  # Step 1: store the column as x
-  # Step 2: compute and store the median (NAs removed)
-  # Step 3: build a mask: which values are above the median AND not NA?
-  # Step 4: use the mask to extract values, then take their mean
-  # Your code here
-
+  x <- df[[col]] # Step 1: store the column as x
+  median <- median(x, na.rm = T)          # Step 2: compute and store the median (NAs removed)
+  above <- !is.na(x) & x > median # Step 3: build a mask: which values are above the median AND not NA?
+  mean(x[above]) # Step 4: use the mask to extract values, then take their mean
 }
 
 # Test:
 # above_median_mean(mtcars, "mpg")
-
+above_median_mean(mtcars, "mpg")
 ```
 
 ### Drill C.3
@@ -218,12 +221,17 @@ above_median_mean <- function(df, col) {
 # Store each intermediate result in its own variable before building the list.
 
 describe <- function(x) {
-  # Your code here
+  list(
+    n_total = length(x),
+    n_missing = sum(is.na(x)),
+    n_present = sum(!is.na(x)),
+    mean_present = mean(x, na.rm = T)
+  )
 
 }
 
 # Test:
-# describe(c(5, NA, 8, 12, NA, 3))
+describe(c(5, NA, 8, 12, NA, 3))
 # Expected: n_total = 6, n_missing = 2, n_present = 4, mean_present = 7
 
 ```
@@ -250,14 +258,23 @@ One slightly bigger function that exercises both habits at once. Take your time 
 # Remember: is.na() check first; mask to extract values, not to compute on.
 
 clean_above <- function(df, col, cutoff) {
-  # Your code here
-
+  x <- df[[col]]
+  keep <- !is.na(x)
+  clean <- x[keep]
+  above <- clean > cutoff
+  list(
+    n_dropped_na = length(x) - length(x[keep]),
+    n_kept = length(clean),
+    n_above_cutoff = sum(above),
+    values_above = clean[above], 
+    mean_above = mean(clean[above])
+  )
 }
 
 # Test:
-# result <- clean_above(airquality, "Ozone", 50)
-# result$n_above_cutoff   # how many ozone readings above 50
-# result$mean_above       # their average
+result <- clean_above(airquality, "Ozone", 50)
+result$n_above_cutoff   # how many ozone readings above 50
+result$mean_above       # their average
 
 ```
 
