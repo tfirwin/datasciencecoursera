@@ -1,0 +1,461 @@
+---
+title: "R Programming Practice (Part 8): Profiling, str(), and Simulation"
+author: "Tim Irwin"
+date: "2026-05-20"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Practice (Part 8): Profiling, str(), and Simulation
+
+This practice set covers three related topics from *R Programming for Data Science* by Roger D. Peng:
+
+1. **The `str()` function** — the single most useful diagnostic tool for inspecting any R object
+2. **Profiling R code** (pages 102–107) — measuring where your code spends its time
+3. **Simulation** (pages 109–116) — generating random numbers and simulating from models
+
+Each section starts with a **lesson** that teaches the concept with a worked example, followed by **exercises**. As always, the examples here are different from the ones in the book and the video lectures.
+
+You may want to start with:
+
+```{r}
+rm(list = ls())
+```
+
+> **Tip:** Two of these topics (profiling and simulation) involve timing and randomness. For timing, your exact numbers will differ from any example — that's expected; what matters is the *relative* comparison. For randomness, **always set a seed** so your results are reproducible, both for your own sanity and so someone else can verify your work.
+
+## Datasets used in this practice
+
+- `airquality` — Daily air quality measurements in New York, May–September 1973.
+- `mtcars` — Fuel consumption and 10 aspects of design/performance for 32 cars.
+- `iris` — Measurements of 150 iris flowers across 3 species.
+
+---
+
+# 1. The `str()` Function
+
+## Lesson 1.1: What `str()` does
+
+`str()` stands for **structure**. It compactly displays the internal structure of any R object, aiming for roughly one line of output per component. Think of it as answering the question: "What *is* this thing, and what's inside it?"
+
+It's a great companion to `summary()`. Where `summary()` gives you statistical summaries (means, quartiles, counts), `str()` shows you the *shape* of an object — its type, dimensions, and a peek at the actual values.
+
+Here it is on a few different object types:
+
+```{r}
+# On a numeric vector
+x <- runif(50, min = 0, max = 100)   # 50 random numbers between 0 and 100
+str(x)
+```
+
+It tells you: `x` is numeric (`num`), has 50 elements (`[1:50]`), and shows the first several values.
+
+```{r}
+# On a factor
+grp <- factor(rep(c("control", "treatment"), each = 25))
+str(grp)
+```
+
+It tells you: it's a factor with 2 levels, names the levels, and shows the underlying integer codes.
+
+```{r}
+# On a data frame
+str(mtcars)
+```
+
+For a data frame, `str()` is especially useful: it tells you the number of observations (rows) and variables (columns), and for each column its name, type, and first few values — all in a compact block.
+
+> **Tip:** Whenever you load a new dataset or get back an object you don't fully understand, `str()` should be your first move. It's faster than printing the whole thing and more informative than `head()` for understanding structure.
+
+### Exercise 1.1
+
+Use `str()` on three different objects and write a one-line comment for each describing what `str()` told you:
+
+1. The `iris` data frame
+2. A character vector you create, e.g. `c("apple", "banana", "cherry")`
+3. A list you create with at least three elements of different types
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.2
+
+`str()` shines on nested structures. Use `split()` to break `mtcars` into groups by `cyl` (cylinders), then call `str()` on the result. In a comment, describe what the output tells you: how many elements does the list have, and what is each element?
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 1.3
+
+Call `str()` on a function — try `str(lm)` or `str(mean)`. What does `str()` show you when given a function rather than data? Write your observation as a comment.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# 2. Profiling R Code
+
+## Lesson 2.1: Why profile, and the golden rule
+
+Profiling means measuring where your code spends its time. The core principle, from the book:
+
+> **Design first, then optimize. Measure, don't guess.**
+
+It's tempting to assume you know which part of your code is slow — but programmers are notoriously bad at guessing this. The reality is that you should *measure* before optimizing anything. Optimizing code that isn't actually the bottleneck just makes your code harder to read for no benefit.
+
+There's a second principle worth internalizing: don't optimize prematurely. Get your code correct and readable first. Only once it works (and only if it's actually too slow) should you profile and optimize.
+
+## Lesson 2.2: `system.time()`
+
+The simplest profiling tool is `system.time()`, which measures how long an expression takes to run. You wrap an expression (or a block in curly braces) in `system.time()` and it reports the time in seconds.
+
+```{r}
+# Time a single expression
+system.time(sort(runif(1e6)))   # sort a million random numbers
+```
+
+The output has three numbers. The two that matter most:
+
+- **user** — CPU time spent on your actual computation
+- **elapsed** — "wall clock" time, i.e. how long you actually waited
+
+For pure computation these are usually close. They can diverge: elapsed can exceed user when your code waits on something external (a network download, reading a file from disk), and elapsed can be *less* than user when work is split across multiple CPU cores.
+
+For a longer block of code, wrap it in curly braces:
+
+```{r}
+# Time a multi-line block
+system.time({
+  total <- 0
+  for (i in 1:100000) {
+    total <- total + sqrt(i)
+  }
+  total
+})
+```
+
+### Exercise 2.1
+
+Use `system.time()` to measure how long it takes to compute the mean of each of 10,000 random samples of size 100. (Use a `for` loop that draws `rnorm(100)` each iteration and stores its mean.) Report the elapsed time.
+
+```{r}
+# Your code here
+
+```
+
+## Lesson 2.3: Comparing two approaches
+
+The real value of `system.time()` is **comparison** — measuring two ways of doing the same thing to see which is faster. A classic comparison: growing a vector inside a loop (slow, because R reallocates memory each time) versus pre-allocating it (fast).
+
+```{r}
+n <- 50000
+
+# Approach A: grow the vector each iteration (the slow way)
+time_grow <- system.time({
+  result <- c()                    # start empty
+  for (i in 1:n) {
+    result <- c(result, i^2)       # append — R reallocates every time
+  }
+})
+
+# Approach B: pre-allocate, then fill (the fast way)
+time_prealloc <- system.time({
+  result <- numeric(n)             # allocate all the space up front
+  for (i in 1:n) {
+    result[i] <- i^2               # just fill in the slot
+  }
+})
+
+time_grow["elapsed"]
+time_prealloc["elapsed"]
+```
+
+The pre-allocated version should be dramatically faster. This is *why* we've been pre-allocating result vectors in all the earlier function practice — now you can measure the payoff.
+
+> **Tip:** Vectorized operations are usually faster still. `(1:n)^2` computes all the squares at once with no explicit loop, and beats both loop versions. When you can express something as a vectorized operation, it's almost always both faster and clearer.
+
+### Exercise 2.2
+
+Compare three ways to square the numbers 1 to 100,000 and sum the results, using `system.time()` on each:
+
+1. A loop that grows a vector with `c()`
+2. A loop that fills a pre-allocated vector
+3. A single vectorized expression: `sum((1:100000)^2)`
+
+Report the elapsed time for each and write a comment about which was fastest.
+
+```{r}
+# Your code here
+
+```
+
+## Lesson 2.4: The R profiler (Rprof)
+
+`system.time()` is great when you already know which chunk to measure. But what if you have no idea where the bottleneck is? That's what the full profiler is for.
+
+`Rprof()` turns on the profiler, which samples the call stack at regular intervals to see which functions are eating time. `summaryRprof()` then tabulates the results into something readable. The workflow:
+
+```{r eval=FALSE}
+Rprof("profile_output.out")    # turn profiler ON, write to a file
+
+# ... run the code you want to profile (just one thing) ...
+result <- lapply(1:100, function(i) {
+  x <- rnorm(10000)
+  mean(sort(x))
+})
+
+Rprof(NULL)                    # turn profiler OFF
+
+summaryRprof("profile_output.out")   # read the results
+```
+
+The summary has two views: `by.total` (total time including sub-functions called) and `by.self` (time spent in that function alone, excluding what it called). The book notes that `by.self` is usually the more useful view — it pinpoints where time is *actually* spent, not just which top-level function you happened to call.
+
+> **Note:** `Rprof()` writes to a file and is interactive in nature — it's best run in your console rather than a knitted document. Also: never use `system.time()` and `Rprof()` at the same time. Pick one.
+
+### Exercise 2.4
+
+In your console, profile the following code using `Rprof()` and `summaryRprof()`. Write a comment about which function the profiler reports as taking the most *self* time.
+
+```{r eval=FALSE}
+# Run this in your console with the profiler on:
+big_job <- function() {
+  out <- numeric(1000)
+  for (i in 1:1000) {
+    x <- rnorm(5000)
+    out[i] <- median(sort(x))
+  }
+  out
+}
+# Profile big_job() — turn Rprof on, call big_job(), turn Rprof off, summarize
+```
+
+```{r}
+# Write your observation as a comment here:
+
+```
+
+---
+
+# 3. Simulation
+
+## Lesson 3.1: The four-letter family of distribution functions
+
+R can generate random numbers from many probability distributions. For each distribution, there are four related functions, distinguished by their first letter:
+
+- **r** — *random*: generate random values (the one you'll use most)
+- **d** — *density*: the probability density at a point
+- **p** — *probability*: the cumulative probability (probability of being below a value)
+- **q** — *quantile*: the inverse — what value corresponds to a given probability
+
+The Normal distribution's four functions are `rnorm`, `dnorm`, `pnorm`, `qnorm`. The same pattern holds for others: `rpois`/`dpois`/... for Poisson, `rbinom`/... for binomial, `runif`/... for uniform.
+
+```{r}
+# Generate 8 random Normal values with mean 100 and SD 15 (like IQ scores)
+iq_scores <- rnorm(8, mean = 100, sd = 15)
+iq_scores
+```
+
+```{r}
+# pnorm: what's the probability a Normal(100, 15) value is below 115?
+pnorm(115, mean = 100, sd = 15)
+```
+
+```{r}
+# qnorm: what score marks the 90th percentile of Normal(100, 15)?
+qnorm(0.90, mean = 100, sd = 15)
+```
+
+### Exercise 3.1
+
+Generate 12 random values from a Normal distribution with mean 50 and standard deviation 10. Then use `summary()` and `str()` to inspect what you got.
+
+```{r}
+# Your code here
+
+```
+
+### Exercise 3.2
+
+A call center receives an average of 6 calls per hour. The Poisson distribution models counts like this. Use `rpois()` to simulate the number of calls received in each of 20 different hours. Then compute the mean of your simulated counts — it should be close to 6.
+
+```{r}
+# Your code here
+
+```
+
+## Lesson 3.2: Setting the seed
+
+Random number generators in R are *pseudo*-random: they produce a deterministic sequence that only looks random, controlled by a starting "seed." If you set the seed to the same value, you get the same sequence every time. **This is essential for reproducibility** — without it, your simulation gives different numbers each run and nobody (including you) can reproduce your results.
+
+```{r}
+set.seed(42)
+a <- rnorm(3)
+a
+
+set.seed(42)
+b <- rnorm(3)   # same seed → identical numbers
+b
+
+identical(a, b)   # TRUE
+```
+
+> **Tip:** Set the seed *once* at the top of a simulation script, before any random generation. The specific number you choose doesn't matter (42, 1, 12345 — all fine); what matters is that it's set, so the run is reproducible. Always set your seed!
+
+### Exercise 3.3
+
+Set the seed to any number, generate 5 random uniform values with `runif(5)`, then reset the same seed and generate 5 more. Use `identical()` to confirm they match.
+
+```{r}
+# Your code here
+
+```
+
+## Lesson 3.3: Simulating from a model
+
+Random number generation gets powerful when you simulate values that follow a *model* you specify. Suppose you believe a plant's height depends on hours of sunlight via:
+
+`height = 5 + 1.5 * sunlight + noise`
+
+where `noise` is random variation. You can simulate a dataset that follows this model:
+
+```{r}
+set.seed(7)
+
+sunlight <- rnorm(100, mean = 8, sd = 2)   # simulate the predictor
+noise <- rnorm(100, mean = 0, sd = 3)      # random variation
+height <- 5 + 1.5 * sunlight + noise        # apply the model
+
+# Inspect the simulated relationship
+summary(height)
+cor(sunlight, height)   # should be a strong positive correlation
+```
+
+The simulated data follows your model's rule, plus realistic random scatter. This is how you'd generate test data, check whether an analysis method recovers a known relationship, or explore "what if" scenarios.
+
+### Exercise 3.4
+
+Simulate a dataset following this model: a student's exam score depends on hours studied via `score = 40 + 5 * hours + noise`, where `hours` is Normal with mean 6 and SD 2, and `noise` is Normal with mean 0 and SD 8. Generate 80 students. Set a seed first. Then report the correlation between `hours` and `score`.
+
+```{r}
+# Your code here
+
+```
+
+## Lesson 3.4: Random sampling with sample()
+
+The `sample()` function draws randomly from a set of values you provide — useful for shuffling, drawing without (or with) replacement, and simulating things like dice or cards.
+
+```{r}
+set.seed(1)
+
+# Draw 5 values from 1 to 100, without replacement
+sample(1:100, 5)
+
+# Simulate 10 dice rolls (with replacement — you can roll the same number twice)
+sample(1:6, 10, replace = TRUE)
+
+# Shuffle a vector (a random permutation)
+sample(c("a", "b", "c", "d", "e"))
+```
+
+A key technique: to randomly sample *rows* of a data frame, sample the row **indices**, then use them to subset. (You've done index-based subsetting before — this combines it with random sampling.)
+
+```{r}
+set.seed(99)
+
+# Randomly pick 5 rows from mtcars
+row_indices <- sample(seq_len(nrow(mtcars)), 5)
+mtcars[row_indices, ]
+```
+
+### Exercise 3.5
+
+Randomly select 6 rows from the `iris` dataset. Remember to set a seed, sample the row indices using `seq_len(nrow(iris))`, and then subset. Which species ended up in your sample?
+
+```{r}
+# Your code here
+
+```
+
+---
+
+# Mini Challenges
+
+These combine the topics. Several use simulation, timing, and `str()` together.
+
+## Challenge 1: Inspect a simulated structure
+
+Simulate a list representing a small experiment: it should contain (1) a vector of 30 random Normal "measurements" (mean 50, sd 5), (2) a factor of 30 group labels (15 `"A"` and 15 `"B"`), and (3) a single logical value for whether the experiment passed quality control. Set a seed first. Then call `str()` on the whole list and describe, in a comment, what the structure output tells you about each element.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 2: Does pre-allocation actually matter?
+
+Settle the question with data. Write two functions that both build a vector of the first `n` triangular numbers (each element is the cumulative sum 1, 1+2, 1+2+3, ...): one that grows the vector with `c()`, one that pre-allocates. Use `system.time()` to compare them at `n = 30000`. Report both elapsed times and, in a comment, state how many times faster the pre-allocated version was.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 3: Simulate and recover
+
+Simulate data from the model `y = 2 + 3 * x + noise` where `x` is Normal(0, 1), `noise` is Normal(0, 1), and you generate 200 points. Set a seed. Then — without using `lm()` — estimate the slope by computing `cor(x, y) * (sd(y) / sd(x))`. Does your estimate come close to the true slope of 3? Write a comment.
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 4: Simulating a coin-flip experiment
+
+Use `sample()` to simulate flipping a fair coin 1,000 times (sample from `c("H", "T")` with replacement). Set a seed. Then:
+
+1. Use `table()` to count heads and tails.
+2. Compute the proportion of heads.
+3. Use `str()` on your result of the 1,000 flips to confirm its structure.
+
+The proportion should be close to 0.5. Then try it again with an *unfair* coin where heads is twice as likely as tails (hint: `sample()` has a `prob` argument).
+
+```{r}
+# Your code here
+
+```
+
+---
+
+## Challenge 5: A reproducible bootstrap
+
+The "bootstrap" is a technique where you repeatedly resample your data *with replacement* to understand the variability of a statistic. Implement a simple version:
+
+1. Take `mtcars$mpg` as your data.
+2. Set a seed.
+3. Write a loop that runs 1,000 times. Each iteration, draw a sample of the same size as `mpg`, **with replacement**, using `sample()`, and record that sample's mean.
+4. You now have 1,000 bootstrap means. Report their mean and their standard deviation (this SD estimates the "standard error" of the mean).
+5. Use `system.time()` to wrap the whole loop and report how long it took.
+6. Use `str()` on your vector of 1,000 means to confirm its structure.
+
+> **Tip:** Pre-allocate the vector of 1,000 means before the loop — you just learned why that matters! To sample with replacement from a vector `x` of length `n`: `sample(x, n, replace = TRUE)`.
+
+```{r}
+# Your code here
+
+```

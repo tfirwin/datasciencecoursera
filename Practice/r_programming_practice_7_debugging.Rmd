@@ -1,0 +1,691 @@
+---
+title: "R Programming Practice (Part 7): Debugging"
+author: "Tim Irwin"
+date: "2026-05-20"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Practice (Part 7): Debugging
+
+This practice set covers debugging from *R Programming for Data Science* by Roger D. Peng (pages 94–101):
+
+1. The three signals: `message`, `warning`, `error`
+2. Reading and interpreting error messages
+3. A diagnostic process for figuring out what went wrong
+4. R's debugging tools: `traceback()`, `debug()`, `browser()`, `recover()`
+5. Defensive coding: anticipating problems before they happen
+
+Each section starts with a **lesson** that teaches the concept with a worked example, followed by **exercises**. Debugging is a slightly different kind of skill from the earlier practice sets — instead of writing new code, a lot of these exercises hand you *broken* code and ask you to diagnose and fix it. That's deliberate: reading and fixing broken code is most of what real programming actually is.
+
+You may want to start with:
+
+```{r}
+rm(list = ls())
+```
+
+> **Tip:** When something breaks, resist the urge to randomly change code until it works. Debugging is detective work: figure out what you expected, what actually happened, and where they diverged — *then* fix. Peng's book ends the chapter with a line worth remembering: "Debugging tools are not a substitute for thinking!"
+
+## Datasets used in this practice
+
+- `airquality` — Daily air quality measurements in New York, May–September 1973.
+- `mtcars` — Fuel consumption and 10 aspects of design/performance for 32 cars.
+- `iris` — Measurements of 150 iris flowers across 3 species.
+
+---
+
+# 1. The Three Signals: message, warning, error
+
+## Lesson 1.1: R has three levels of "something happened"
+
+When R wants to tell you something, it uses one of three levels, in increasing severity:
+
+- **message** — a gentle notification. Execution continues normally. Produced by `message()`.
+- **warning** — "something looks off, but I'll keep going." Execution continues, but you should pay attention. Produced by `warning()`.
+- **error** — "I can't continue." Execution stops immediately. Produced by `stop()`.
+
+Only an **error** is fatal. Messages and warnings let the code keep running.
+
+Here's each one in action:
+
+```{r}
+# A message — informational, execution continues
+demo_message <- function() {
+  message("Just so you know: starting the calculation")
+  42
+}
+demo_message()
+```
+
+```{r}
+# A warning — something's off, but R returns a value anyway
+sqrt(-4)   # can't take sqrt of a negative, so R warns and returns NaN
+```
+
+```{r error=TRUE}
+# An error — execution halts (error=TRUE lets this doc keep knitting)
+demo_error <- function() {
+  stop("I cannot proceed")
+  42   # this line never runs
+}
+demo_error()
+```
+
+> **Tip:** In R Markdown, a code chunk that throws an error normally stops the whole document from knitting. Adding `error=TRUE` to the chunk header (like `{r error=TRUE}`) tells R to show the error and keep going. That's how this document can demonstrate errors without breaking.
+
+### Exercise 1.1
+
+Write a function `check_value(x)` that:
+
+- Uses `message()` to print `"Checking the value..."` (informational)
+- If `x` is negative, uses `warning()` to warn `"Value is negative"` but still returns `x`
+- If `x` is exactly 0, uses `stop()` to halt with `"Value cannot be zero"`
+- Otherwise just returns `x`
+
+Test it with `check_value(5)`, `check_value(-3)`, and `check_value(0)`. (Put the zero test in a chunk with `error=TRUE` so the doc still knits.)
+
+```{r}
+# Your code here
+
+```
+
+```{r error=TRUE}
+# Test the error case here
+
+```
+
+---
+
+## Lesson 1.2: Why warnings matter — they're easy to miss
+
+The danger of warnings is that your code *keeps running*, so you might not notice something went wrong until much later. Watch this:
+
+```{r}
+ages <- c("34", "29", "forty", "51")
+numeric_ages <- as.numeric(ages)   # "forty" can't convert
+numeric_ages
+mean(numeric_ages)   # the NA silently poisons the result
+```
+
+The `as.numeric()` call warned that NAs were introduced (because `"forty"` isn't a number), but it didn't stop. Then `mean()` returned `NA` because of that one bad value. If you weren't watching for the warning, you might just see `NA` and be confused.
+
+### Exercise 1.2
+
+The vector below is supposed to contain temperatures, but someone typed one of them as a word. Convert it to numeric, observe the warning, then compute the mean correctly (ignoring the value that couldn't convert).
+
+```{r}
+temps <- c("68", "72", "seventy", "81", "75")
+# Your code here: convert to numeric, then compute the mean ignoring NAs
+
+```
+
+---
+
+# 2. Reading Error Messages
+
+## Lesson 2.1: Error messages tell you where and what
+
+A good chunk of debugging is just *reading the error carefully*. R error messages usually tell you two things: where the problem happened and what kind of problem it was. Consider:
+
+```{r error=TRUE}
+total <- sum(values)   # `values` was never created
+```
+
+The message — `object 'values' not found` — is precise. It's not a mysterious failure; R is telling you exactly what's wrong: you referenced a name that doesn't exist. Maybe a typo, maybe you forgot to create it, maybe you're running lines out of order.
+
+Here's another extremely common one:
+
+```{r error=TRUE}
+classify_temp <- function(temp) {
+  if (temp > 80) {
+    "hot"
+  } else {
+    "not hot"
+  }
+}
+
+# Now apply it to a whole column — what happens?
+classify_temp(airquality$Temp)
+```
+
+The error is `the condition has length > 1`. This is one of the most common R errors, and you've actually run into its root cause before: `if` expects a **single** TRUE/FALSE, but `airquality$Temp > 80` is a whole *vector* of TRUE/FALSEs. The function was written for one value at a time, but you fed it a vector.
+
+> **Tip:** "the condition has length > 1" almost always means you put a vector where `if` expected a single value. The fix is usually to either vectorize the function (loop over elements, or use `ifelse()`) or check `length()` and handle vectors explicitly.
+
+### Exercise 2.1
+
+The error below is one of the most common in R. Read the error message, explain in a comment what's actually wrong, and then fix it so the function correctly classifies the *whole* `mtcars$mpg` vector. Hint: `ifelse()` is a vectorized version of if/else that works on whole vectors.
+
+```{r error=TRUE}
+rate_mpg <- function(x) {
+  if (x > 25) {
+    "good"
+  } else {
+    "poor"
+  }
+}
+rate_mpg(mtcars$mpg)   # this errors
+```
+
+```{r}
+# Your fixed version here — should return a vector of "good"/"poor"
+
+```
+
+---
+
+## Lesson 2.2: The NA-in-a-condition error
+
+Here's a function that looks fine but breaks on real data. This is Peng's classic example, recreated with different code:
+
+```{r error=TRUE}
+describe_reading <- function(x) {
+  if (x > 100) {
+    "high"
+  } else {
+    "normal"
+  }
+}
+
+# Works on a clean value:
+describe_reading(150)
+```
+
+```{r error=TRUE}
+# But airquality$Ozone has NAs. Grab one and try:
+describe_reading(airquality$Ozone[5])   # row 5 is NA
+```
+
+The error — `missing value where TRUE/FALSE needed` — happens because `NA > 100` evaluates to `NA`, and `if` can't decide what to do with `NA`. It needs a definite TRUE or FALSE.
+
+The fix is to check for NA *first*, before any other comparison (you've done this before in your functions practice):
+
+```{r}
+describe_reading2 <- function(x) {
+  if (is.na(x)) {
+    "missing"
+  } else if (x > 100) {
+    "high"
+  } else {
+    "normal"
+  }
+}
+
+describe_reading2(airquality$Ozone[5])   # now returns "missing"
+describe_reading2(150)
+```
+
+### Exercise 2.2
+
+The function below crashes when it hits an NA. Reproduce the error first (in the `error=TRUE` chunk), then write a fixed version that returns `"unknown"` for missing values. Test the fix on `airquality$Solar.R[5]` (which is NA) and on a normal value.
+
+```{r error=TRUE}
+solar_level <- function(x) {
+  if (x > 200) {
+    "strong"
+  } else {
+    "weak"
+  }
+}
+solar_level(airquality$Solar.R[5])   # reproduce the error
+```
+
+```{r}
+# Your fixed version here
+
+```
+
+---
+
+# 3. A Diagnostic Process
+
+## Lesson 3.1: The six questions
+
+Peng lays out a set of questions to ask whenever something breaks. They sound obvious, but actually asking them — out loud or in writing — is what separates efficient debugging from flailing:
+
+1. What was your input? How did you call the function?
+2. What were you expecting? (Output, messages, results?)
+3. What did you actually get?
+4. How does what you got differ from what you expected?
+5. Were your expectations correct in the first place?
+6. Can you reproduce the problem exactly?
+
+Question 5 is the sneaky one. Sometimes the code is fine and your *expectation* was wrong. And question 6 matters because a bug you can't reproduce is a bug you can't fix.
+
+Here's the process in action. Suppose you write this and get a surprising result:
+
+```{r}
+# I expected the mean mpg of 6-cylinder cars
+six_cyl_mean <- mean(mtcars$mpg[mtcars$cyl = 6])
+```
+
+Wait — that should have errored. Let me show the real version:
+
+```{r error=TRUE}
+six_cyl_mean <- mean(mtcars$mpg[mtcars$cyl = 6])
+```
+
+The error points at the `=` sign. Working through the questions: my *input* was a subsetting expression; I *expected* the mean of 6-cylinder cars; I *got* a syntax error about an unexpected `=`. The divergence: I used `=` (assignment) where I meant `==` (comparison). Classic typo.
+
+```{r}
+# Corrected:
+six_cyl_mean <- mean(mtcars$mpg[mtcars$cyl == 6])
+six_cyl_mean
+```
+
+### Exercise 3.1
+
+The code below is *supposed* to compute the average `Sepal.Length` of setosa irises, but it returns something wrong (not an error — a wrong answer, which is more dangerous). Work through Peng's questions: what did you expect, what did you get, and where's the divergence? Write your diagnosis as comments, then fix it.
+
+```{r}
+# This runs without error but gives the wrong answer:
+wrong_answer <- mean(iris$Sepal.Length[iris$Species == "Setosa"])
+wrong_answer
+# Hint: the result is NaN. Why? What's different about "Setosa" vs the actual data?
+
+```
+
+```{r}
+# Your corrected version here
+
+```
+
+> **Tip:** R is case-sensitive. The species in `iris` is `"setosa"` (lowercase), not `"Setosa"`. When a comparison matches *nothing*, you get an empty vector, and `mean()` of an empty vector is `NaN`. This is exactly why question 5 — "were my expectations correct?" — matters. The code did exactly what you told it; you just told it the wrong string.
+
+---
+
+# 4. Debugging Tools
+
+## Lesson 4.1: The humble print/cat statement
+
+Before the fancy tools, know this: **inserting `print()` or `cat()` statements is the most common debugging technique in the world**, and there's no shame in it. When you're not sure what's happening inside a function, print things out to see.
+
+```{r}
+# A function that's misbehaving — let's add print statements to watch it work
+buggy_sum <- function(x) {
+  total <- 0
+  for (i in seq_along(x)) {
+    cat("i =", i, " x[i] =", x[i], " total so far =", total, "\n")  # debugging line
+    total <- total + x[i]
+  }
+  total
+}
+
+buggy_sum(c(5, 10, NA, 20))
+```
+
+The printed trace shows you exactly where things go wrong: as soon as it hits the NA, `total` becomes NA and stays that way. The print statements made the invisible visible.
+
+### Exercise 4.1
+
+The function below is supposed to count how many values in a vector are above a threshold, but it always returns 0. Add `cat()` or `print()` statements inside the loop to watch what's happening, figure out the bug, and fix it.
+
+```{r}
+count_above <- function(x, threshold) {
+  count <- 0
+  for (i in seq_along(x)) {
+    if (x[i] > threshold) {
+      count + 1   # <-- something's wrong here
+    }
+  }
+  count
+}
+
+count_above(c(10, 20, 30, 40), 15)   # should return 3, but returns 0
+```
+
+```{r}
+# Your debugged version here (add print statements first to find it, then fix)
+
+```
+
+> **Tip:** The bug in 4.1 is the same *category* as one you hit before — a result that's computed but never stored. `count + 1` calculates a value and throws it away. It needs to be `count <- count + 1`. Watching `count` with a print statement makes this obvious: it never changes.
+
+---
+
+## Lesson 4.2: traceback()
+
+When an error happens deep inside nested function calls, it's not always clear *which* function actually failed. `traceback()` shows you the chain of calls that led to the error — the "call stack."
+
+You call `traceback()` immediately after an error occurs (it must be the very next thing you do). Imagine three functions that call each other:
+
+```{r error=TRUE}
+inner <- function(x) {
+  x + missing_object   # this will error
+}
+middle <- function(x) {
+  inner(x)
+}
+outer <- function(x) {
+  middle(x)
+}
+
+outer(5)   # errors deep inside `inner`
+```
+
+After running this in your console, you would type `traceback()` and see something like:
+
+```
+3: inner(x)
+2: middle(x)
+1: outer(5)
+```
+
+Read it bottom to top: you called `outer`, which called `middle`, which called `inner`, and the error happened in `inner`. Now you know exactly where to look.
+
+> **Note:** `traceback()` is interactive — it works in the RStudio console, not inside a knitted document. So for this exercise, you'll run the code in your console and call `traceback()` there.
+
+### Exercise 4.2
+
+In your console (not the knitted doc), define these three functions and call the outer one, then run `traceback()` to confirm which function the error originates in. Write a comment describing what the traceback showed you.
+
+```{r eval=FALSE}
+step_a <- function(v) {
+  mean(v) + undefined_thing   # the bug lives here
+}
+step_b <- function(v) {
+  step_a(v)
+}
+step_c <- function(v) {
+  step_b(v)
+}
+
+step_c(mtcars$mpg)
+# Then run traceback() in the console and note what it showed
+```
+
+```{r}
+# Write your observation as a comment here:
+
+```
+
+---
+
+## Lesson 4.3: browser()
+
+`browser()` is the most powerful tool here. Inserting `browser()` into a function pauses execution at that exact spot and drops you into an interactive session where you can inspect every variable, run code, and step forward line by line.
+
+Inside the browser, a few key commands:
+
+- `n` — execute the current line and move to the next
+- `c` — continue running until the function finishes (or errors)
+- `Q` — quit the browser
+- typing any variable name — prints its current value
+
+```{r eval=FALSE}
+# Example (run this in your console, not the knitted doc):
+inspect_me <- function(x) {
+  doubled <- x * 2
+  browser()              # execution pauses here
+  result <- doubled + 10
+  result
+}
+
+inspect_me(5)
+# At the Browse> prompt, type `doubled` to see its value (10),
+# then `n` to step to the next line, then `c` to finish.
+```
+
+> **Note:** Like `traceback()`, `browser()` is interactive and only works in a live R session, not in a knitted document. Try it in your console to get a feel for stepping through code.
+
+### Exercise 4.3
+
+In your console, take the `count_above` function you fixed in Exercise 4.1, insert a `browser()` just inside the loop, and step through a couple of iterations using `n`. At each pause, inspect the value of `count` and `x[i]`. Write a comment describing what you observed about how `count` changes (or doesn't) across iterations.
+
+```{r}
+# Write your observation as a comment here:
+
+```
+
+---
+
+# 5. Defensive Coding
+
+## Lesson 5.1: Catching problems before they happen
+
+The best debugging is the kind you never have to do, because you wrote the function to fail loudly and early when given bad input. You've already practiced this with `stop()` in the validation challenge. Here it's framed as a debugging strategy.
+
+Consider a function that assumes its input is a single positive number. Without checks, bad input produces confusing downstream errors. With checks, it fails immediately with a clear message:
+
+```{r error=TRUE}
+safe_sqrt <- function(x) {
+  if (length(x) != 1) {
+    stop("x must be a single number, but it has length ", length(x))
+  }
+  if (!is.numeric(x)) {
+    stop("x must be numeric, but it is ", class(x))
+  }
+  if (x < 0) {
+    warning("x is negative; result will be NaN")
+  }
+  sqrt(x)
+}
+
+safe_sqrt(16)        # fine
+```
+
+```{r error=TRUE}
+safe_sqrt(c(1, 2, 3))   # fails early with a clear message
+```
+
+```{r}
+safe_sqrt(-4)        # warns but proceeds
+```
+
+Notice the error message uses the actual length and class, so the caller knows exactly what they did wrong. That's the difference between a helpful error and a cryptic one.
+
+### Exercise 5.1
+
+Write a defensive function `safe_divide(a, b)` that divides `a` by `b`, but:
+
+- Stops with a clear message if either `a` or `b` is not numeric (mention which one and its actual class)
+- Stops with a clear message if `b` is 0 (dividing by zero)
+- Otherwise returns `a / b`
+
+Test it with a valid call, a divide-by-zero call, and a non-numeric call (each problematic one in an `error=TRUE` chunk).
+
+```{r}
+# Your code here
+
+```
+
+```{r error=TRUE}
+# Test the divide-by-zero case
+
+```
+
+```{r error=TRUE}
+# Test the non-numeric case
+
+```
+
+---
+
+## Lesson 5.2: The vectorization bug, revisited
+
+Recall the "condition has length > 1" error from Lesson 2.1. A robust function should either handle vectors properly or refuse them with a clear message. Here's a function that detects the problem and tells the caller exactly what to do:
+
+```{r error=TRUE}
+grade_one <- function(score) {
+  if (length(score) > 1) {
+    stop("grade_one() takes a single score. For a vector, use sapply(scores, grade_one).")
+  }
+  if (score >= 60) "pass" else "fail"
+}
+
+grade_one(75)            # works
+```
+
+```{r error=TRUE}
+grade_one(c(75, 50, 90)) # fails with a helpful instruction
+```
+
+```{r}
+# And here's how the caller would apply it to a vector, as the message suggests:
+sapply(c(75, 50, 90), grade_one)
+```
+
+### Exercise 5.2
+
+Take the `solar_level` function you fixed in Exercise 2.2 (the one that handles NA). Add a length check at the very top that stops with a helpful message if given a vector longer than 1. Then demonstrate both: the error when you pass the whole `airquality$Solar.R` column, and the correct result when you use `sapply()` to apply it across the column. (Use `head()` to keep the `sapply` output short.)
+
+```{r}
+# Your code here — the length-checked version of solar_level
+
+```
+
+```{r error=TRUE}
+# Demonstrate the error by passing the whole column
+
+```
+
+```{r}
+# Demonstrate the correct vectorized usage with sapply (use head() to keep it short)
+
+```
+
+---
+
+# Mini Challenges
+
+These combine diagnosis and fixing. Each one hands you broken code — your job is to find and fix the bug, ideally using the tools and process from the lessons.
+
+## Challenge 1: Three bugs in one function
+
+The function below is meant to take a numeric vector and return the mean of all values strictly above the average. It has **three** separate bugs. Find and fix all of them. (Hint: use print statements, and watch for the mask-vs-values trap.)
+
+```{r error=TRUE}
+above_avg_mean <- function(x) {
+  avg <- mean(x)                    # bug-prone if there are NAs
+  mask <- x > avg
+  result <- mean(mask)              # is this the mean we want?
+  reslut                            # returned value
+}
+
+above_avg_mean(c(4, 8, 15, 16, 23, 42))
+```
+
+```{r}
+# Your fully corrected version here. It should return the mean of the
+# values above the average. Test it on c(4, 8, 15, 16, 23, 42).
+
+```
+
+---
+
+## Challenge 2: The silent wrong answer
+
+This function runs without any error or warning, but gives a wrong result. It's supposed to return the number of `airquality` rows where `Temp` is above 85. Diagnose why it's wrong using Peng's questions, then fix it.
+
+```{r}
+hot_days <- function(df) {
+  mask <- df$Temp > 85
+  length(mask)        # this returns something, but is it the count of hot days?
+}
+
+hot_days(airquality)
+# Hint: length(mask) vs sum(mask) — what's the difference?
+
+```
+
+```{r}
+# Your corrected version here
+
+```
+
+---
+
+## Challenge 3: Reproduce, then fix
+
+The function below works sometimes and fails other times. Your job: first figure out *what inputs make it fail* (reproduce the problem reliably), then fix it so it works on all of them.
+
+```{r error=TRUE}
+risk_category <- function(ozone) {
+  if (ozone > 100) {
+    "hazardous"
+  } else if (ozone > 50) {
+    "elevated"
+  } else {
+    "acceptable"
+  }
+}
+
+# These work:
+risk_category(120)
+risk_category(30)
+```
+
+```{r error=TRUE}
+# Find an input from airquality$Ozone that breaks it, and reproduce the error:
+# (Hint: what kind of values does airquality$Ozone contain that 120 and 30 don't?)
+
+```
+
+```{r}
+# Your fixed version here that handles ALL values in airquality$Ozone,
+# then apply it across the whole column with sapply() and table() the results.
+
+```
+
+---
+
+## Challenge 4: Debugging a pipeline
+
+This multi-step function chains several operations. It errors somewhere in the middle. Use print statements (or `browser()` in your console) to find which step fails and why, then fix it.
+
+```{r error=TRUE}
+summarize_group <- function(df, group_col, value_col) {
+  groups <- unique(df[[group_col]])
+  results <- numeric(length(groups))
+  for (i in seq_along(groups)) {
+    g <- groups[i]
+    subset_rows <- df[df[[group_col]] == g, ]
+    results[i] <- mean(subset_rows[value_col], na.rm = TRUE)   # bug is around here
+  }
+  names(results) <- groups
+  results
+}
+
+# Should give average mpg for each cylinder count:
+summarize_group(mtcars, "cyl", "mpg")
+```
+
+```{r}
+# Your corrected version here.
+# Hint: subset_rows[value_col] vs subset_rows[[value_col]] — one gives a
+# data frame, the other gives the vector you actually want to average.
+
+```
+
+---
+
+## Challenge 5: Write it defensively from scratch
+
+Now flip the script: instead of fixing broken code, write robust code. Write `column_zscore(df, col)` that returns the z-scores of a column (each value minus the column mean, divided by the standard deviation). But make it defensive:
+
+- Stop if `df` isn't a data frame (clear message)
+- Stop if `col` isn't a single character string
+- Stop if `col` isn't a column of `df` (name the bad column)
+- Stop if the column isn't numeric (name the column and its class)
+- Handle NAs correctly in the mean and sd calculations
+- Return the vector of z-scores
+
+Test it on `mtcars` with `"mpg"` (valid), and trigger at least two of the error conditions in `error=TRUE` chunks.
+
+> **Tip:** A z-score is `(x - mean) / sd`. Because R is vectorized, once you have the cleaned column `x`, the whole calculation is one line: `(x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)`. The defensive checks are the substance of this challenge.
+
+```{r}
+# Your code here
+
+```
+
+```{r error=TRUE}
+# Trigger an error condition
+
+```
+
+```{r error=TRUE}
+# Trigger a different error condition
+
+```
