@@ -1,0 +1,227 @@
+---
+title: "R Programming Drill: The Current Piece & Passing Functions"
+author: "Tim Irwin"
+date: "2026-05-20"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# R Programming Drill: The Current Piece & Passing Functions
+
+This is a focused drill, not a broad practice set. It targets the two specific habits that have shown up in your scratch work — not as separate weaknesses, but as one family of "what am I holding right now?" confusions.
+
+**Pattern 1 — The current piece, not the whole thing.** Inside a loop or an apply function, the iterator variable (`x`, `sp`, `col`) is your handle on the *current* element. Referencing the full original object inside the loop body is almost always the bug.
+
+**Pattern 2 — Pass a function, don't call one.** `lapply`, `tapply`, `mapply` want a *function* (a recipe they'll run later). Writing `sum(x)` hands them the result instead of the recipe. They want `function(x) sum(x)` (or just the name `sum`).
+
+The exercises are short and repetitive on purpose. You're building a reflex.
+
+```{r}
+rm(list = ls())
+```
+
+> **The one question to ask, every time:** "At this exact spot in my code, am I holding the WHOLE object or the CURRENT PIECE? And am I handing over a FUNCTION or a RESULT?" Say it out loud if you have to. That sentence catches every bug in this drill.
+
+## Datasets used
+
+- `mtcars`, `iris`, `airquality`, `ChickWeight` — all built in.
+
+---
+
+# Part A: Spot the bug (no computer)
+
+Each snippet below has exactly one bug, and it's always one of our two patterns. For each, **write a comment saying which pattern it is and what the fix is** — before running anything.
+
+### Drill A.1
+
+```{r}
+# GOAL: mean Sepal.Width for each species
+# results <- list()
+# for (sp in unique(iris$Species)) {
+#   results[[sp]] <- mean(iris$Sepal.Width)   # <-- bug?
+# }
+
+# Which pattern is broken? Write the fix as a comment, then write the
+# corrected loop below and run it.
+
+```
+
+### Drill A.2
+
+```{r}
+# GOAL: the maximum of each numeric column of mtcars, as a list
+# lapply(mtcars, max(x))   # <-- bug?
+
+# Which pattern? Fix it below and run.
+
+```
+
+### Drill A.3
+
+```{r}
+# GOAL: for each Diet group (a data frame), the number of rows
+# diet_list <- split(ChickWeight, ChickWeight$Diet)
+# lapply(diet_list, function(d) nrow(ChickWeight))   # <-- bug?
+
+# Which pattern? Fix it below and run.
+
+```
+
+### Drill A.4
+
+```{r}
+# GOAL: count, for each column, how many values exceed 100
+# cols <- c("disp", "hp")
+# mapply(function(col) sum(mtcars[[col]] > 100), cols)   # looks ok?
+
+# This one actually runs. Is it correct? If yes, say why. If it's fragile,
+# explain what would break it.
+
+```
+
+---
+
+# Part B: Fill in the iterator
+
+These all have the right structure. Your only job is to replace the WHOLE-object reference with the CURRENT-PIECE reference. The skeleton is done — just fix the body.
+
+### Drill B.1
+
+```{r}
+# GOAL: mean Petal.Length per species, via a for loop
+results <- list()
+for (sp in unique(iris$Species)) {
+  # FIX THIS LINE so it uses the current species `sp`, not the whole column:
+  # results[[sp]] <- mean(iris$Petal.Length)
+  
+}
+results
+```
+
+### Drill B.2
+
+```{r}
+# GOAL: for each diet's data frame, the mean weight
+diet_list <- split(ChickWeight, ChickWeight$Diet)
+# FIX the anonymous function so it uses the current data frame `d`:
+# lapply(diet_list, function(d) mean(ChickWeight$weight))
+
+```
+
+### Drill B.3
+
+```{r}
+# GOAL: for each month's wind data, the range (max - min)
+# tapply gives you the current group as `x` inside the anonymous function.
+# FIX so it operates on `x`, not the whole column:
+# tapply(airquality$Wind, airquality$Month, function(x) max(airquality$Wind) - min(airquality$Wind))
+
+```
+
+---
+
+# Part C: Recipe, not result
+
+These target Pattern 2. Each one calls a function where it should *pass* one. Rewrite each so it hands over a function (either an anonymous `function(x) ...` or just the bare function name).
+
+### Drill C.1
+
+```{r}
+# GOAL: median of each numeric column of mtcars
+# BROKEN: median() is being called, not passed
+# lapply(mtcars, median(mtcars))
+
+# Two valid fixes exist — write BOTH:
+# (a) pass the bare function name
+# (b) pass an anonymous function
+
+```
+
+### Drill C.2
+
+```{r}
+# GOAL: mean Wind per month
+# BROKEN: mean() is called immediately
+# tapply(airquality$Wind, airquality$Month, mean(airquality$Wind))
+
+# Write the corrected version (passing the function, not calling it):
+
+```
+
+### Drill C.3
+
+```{r}
+# GOAL: for paired vectors, raise each base to its matching power
+bases  <- c(2, 3, 4, 5)
+powers <- c(5, 4, 3, 2)
+# BROKEN: the operation is computed instead of wrapped in a function
+# mapply(bases ^ powers, bases, powers)
+
+# Write the corrected version using function(b, p) ... :
+
+```
+
+---
+
+# Part D: Build it from a blank line
+
+No skeleton this time. Write each from scratch, narrating the "whole vs piece / function vs result" question in comments as you go.
+
+### Drill D.1
+
+```{r}
+# Using a for loop, build a named list giving the mean Sepal.Length
+# for each iris species. Before each line, jot a comment: am I about to
+# reference the whole column or the current species?
+
+```
+
+### Drill D.2
+
+```{r}
+# Using tapply with an anonymous function, return for each iris species a
+# named vector c(mean = ..., sd = ...) of Sepal.Length.
+# (This is the "anonymous function returning a named vector" pattern you
+#  already nailed in the loop functions practice — prove to yourself it
+#  wasn't a fluke.)
+
+```
+
+### Drill D.3
+
+```{r}
+# You have two parallel vectors:
+species_list <- c("setosa", "versicolor", "virginica")
+cutoffs      <- c(5.0, 6.0, 6.5)
+# For each (species, cutoff) pair, count how many irises of that species
+# have Sepal.Length above that cutoff. Use mapply with an anonymous
+# function of two arguments. Result: a named vector of three counts.
+
+```
+
+---
+
+# Part E: One real, messy task
+
+Pull it together on something slightly bigger. No hints about which pattern is where — just stay disciplined with the question.
+
+### Drill E.1
+
+```{r}
+# For each cylinder group in mtcars (4, 6, 8), produce a named list where
+# each element is itself a named vector containing:
+#   n        -- number of cars in that group
+#   avg_mpg  -- their average mpg
+#   avg_hp   -- their average hp
+#
+# Use split() to break mtcars into groups, then lapply() with an anonymous
+# function that receives each group's DATA FRAME and pulls what it needs
+# from THAT data frame (not from mtcars).
+#
+# Self-check before running: inside your anonymous function, every reference
+# should be to the parameter (e.g. `g`), never to `mtcars`.
+
+```
+
+> **After you finish E.1**, reread your anonymous function and circle every object name. If any of them says `mtcars` instead of your parameter, that's Pattern 1 trying to sneak back in. That circling habit — done for ten seconds before you run — is what turns this from a thing you catch *after* an error into a thing you catch *before*.
